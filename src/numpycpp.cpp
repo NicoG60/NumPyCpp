@@ -1,20 +1,10 @@
 #include "numpycpp.h"
 #include <regex>
 #include <algorithm>
-#include <zip.h>
+#include <zip_file.hpp>
 #include <sstream>
 
 namespace NumPy {
-
-bool is_big_endian()
-{
-	union {
-		uint32_t i;
-		char c[4];
-	} bint = {0x01020304};
-
-	return bint.c[0] == 1;
-}
 
 Array::Array(descr_t d, size_t ds, shape_t s, bool f) :
 	_shape(s),
@@ -37,7 +27,7 @@ Array::Array(std::istream& st) :
 	_fortran_order(false),
 	_size(1)
 {
-	parse(st);
+	load(st);
 }
 
 Array::Array() :
@@ -55,7 +45,7 @@ Array::Array(const std::string& fn) :
 	_fortran_order(false),
 	_size(1)
 {
-	parse(fn);
+	load(fn);
 }
 
 Array::Array(const Array& c) :
@@ -110,14 +100,14 @@ shape_t Array::shape() const
 	return _shape;
 }
 
-void Array::parse(const std::string& fn)
+void Array::load(const std::string& fn)
 {
 	std::ifstream ifs(fn, std::ios_base::in | std::ios_base::binary);
 
-	parse(ifs);
+	load(ifs);
 }
 
-void Array::parse(std::istream& st)
+void Array::load(std::istream& st)
 {
 	//Check the magic phrase
 	char magic[7];
@@ -419,95 +409,32 @@ Npz::Npz(const std::string& fn)
 
 void Npz::load(const std::string& fn)
 {
-	int err;
-	zip_t* f = zip_open(fn.c_str(), ZIP_RDONLY, &err);
+	miniz_cpp::zip_file f;
 
-	if(!f)
+	f.load(fn);
+
+	for(auto npy_n : f.namelist())
 	{
-		zip_error_t e;
-		zip_error_init_with_code(&e, err);
-		throw std::runtime_error(e.str);
-	}
-
-	zip_int64_t nb = zip_get_num_files(f);
-
-	for(zip_int64_t i = 0; i < nb; i++)
-	{
-		zip_stat_t npy_s;
-		if(zip_stat_index(f, static_cast<zip_uint64_t>(i), ZIP_FL_UNCHANGED, &npy_s) != 0)
-		{
-			const char* e = zip_strerror(f);
-			zip_close(f);
-			throw std::runtime_error(e);
-		}
-
-		std::string name(npy_s.name);
-		name.erase(name.size()-4);
-
-		zip_file_t* npy = zip_fopen_index(f, npy_s.index, ZIP_FL_UNCHANGED);
-
-		if(!npy)
-		{
-			const char* e = zip_strerror(f);
-			zip_close(f);
-			throw std::runtime_error(e);
-		}
-
-		std::string content(npy_s.size, 0);
-
-		if(zip_fread(npy, &content[0], npy_s.size) == -1)
-		{
-			const char* e = zip_strerror(f);
-			zip_close(f);
-			throw std::runtime_error(e);
-		}
-
+		std::string content = f.read(npy_n);
 		std::istringstream iss (content);
-
-		_arrays[name] = Array(iss);
+		npy_n.erase(npy_n.size()-4);
+		_arrays[npy_n] = Array(iss);
 	}
-
-	zip_close(f);
 }
 
-/*void Npz::save(const std::string& fn)
+void Npz::save(const std::string& fn)
 {
-	int err;
-	zip_t* f = zip_open(fn.c_str(), ZIP_CREATE | ZIP_TRUNCATE, &err);
-
-	if(!f)
-	{
-		zip_error_t e;
-		zip_error_init_with_code(&e, err);
-		throw std::runtime_error(e.str);
-	}
+	miniz_cpp::zip_file f;
 
 	for(auto e : _arrays)
 	{
-		std::ostringstream os;
-		e.second.save(os);
-		std::string content = os.str();
-
-		zip_source_t* src = zip_source_buffer(f, &content[0], content.size(), 0);
-
-		if(!src)
-		{
-			const char* m = zip_strerror(f);
-			zip_close(f);
-			throw std::runtime_error(m);
-		}
-
-		if(zip_file_add(f, (e.first + ".npy").c_str(), src, ZIP_FL_OVERWRITE) == -1)
-		{
-			zip_source_free(src);
-			const char* m = zip_strerror(f);
-			zip_close(f);
-			throw std::runtime_error(m);
-		}
+		std::stringstream st;
+		e.second.save(st);
+		f.writestr(e.first+".npy", st.str());
 	}
 
-	zip_close(f);
-}*/
+	f.save(fn);
+}
 
 void Npz::add(const std::string& fn, const Array& a)
 {
@@ -516,7 +443,15 @@ void Npz::add(const std::string& fn, const Array& a)
 
 Array& Npz::get(const std::string& fn)
 {
+	if(!contains(fn))
+		throw std::out_of_range("array name not found");
+
 	return _arrays[fn];
+}
+
+void Npz::remove(const std::string& fn)
+{
+	_arrays.erase(fn);
 }
 
 bool Npz::canBeMapped()

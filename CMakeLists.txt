@@ -1,8 +1,9 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0 FATAL_ERROR)
 
+#Configure the project
 project(NumpyCpp)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -10,17 +11,19 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 option(ENABLE_STATIC "Build static (.a) library" ON)
 
-find_package(ZLIB REQUIRED)
+#Variables
+set(TP_DIR ./third_party)
+set(MINIZ_INCLUDE ${TP_DIR}/miniz-cpp)
+set(CATCH_INCLUDE ${TP_DIR}/Catch2/single_include)
 
-include_directories(${ZLIB_INCLUDE_DIRS})
-include_directories(include)
-
-set(SRC src/numpycpp.cpp)
+set(SRC ./src/numpycpp.cpp)
 set(SH_NAME ${PROJECT_NAME})
 set(ST_NAME ${PROJECT_NAME}-static)
 
+#Binaries
+include_directories(./src ${MINIZ_INCLUDE} ${CATCH_INCLUDE})
+
 add_library(${SH_NAME} SHARED ${SRC})
-target_link_libraries(${SH_NAME} ${ZLIB_LIBRARIES})
 install(TARGETS ${SH_NAME} LIBRARY DESTINATION lib PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 if(ENABLE_STATIC)
@@ -31,6 +34,12 @@ endif(ENABLE_STATIC)
 
 install(FILES "numpycpp.h" DESTINATION include)
 
-add_executable(test test/main.cpp test/test.cpp)
-target_link_libraries(test ${ST_NAME})
-add_test(NAME AllTests COMMAND test WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/test)
+enable_testing()
+
+add_executable(unit_test
+	test/main.cpp
+	test/test_types.cpp
+	test/test_npz.cpp
+	test/test_f16_error.cpp)
+target_link_libraries(unit_test ${ST_NAME})
+add_test(NAME AllTests COMMAND ${CMAKE_CURRENT_BINARY_DIR}/bin/unit_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
