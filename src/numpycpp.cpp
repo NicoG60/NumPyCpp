@@ -59,12 +59,14 @@ Array::Array(const Array& c) :
 
 Array& Array::operator =(const Array& c)
 {
-	_data = c._data;
 	_shape = c._shape;
 	_descr = c._descr;
 	_descr_size = c._descr_size;
 	_fortran_order = c._fortran_order;
 	_size = c._size;
+
+	_data.reset(new base_t[_size * _descr_size], std::default_delete<base_t[]>())
+	memcpy(_data.get(), c._data.get(), _size * _descr_size);
 
 	return *this;
 }
