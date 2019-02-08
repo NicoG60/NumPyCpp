@@ -4,6 +4,8 @@
 #include <zip_file.hpp>
 #include <sstream>
 
+#define IS_BIG_ENDIAN (*reinterpret_cast<const uint16_t *>("\0\xff") < 0x100)
+
 namespace NumPy {
 
 Array::Array(descr_t d, size_t ds, shape_t s, bool f) :
@@ -65,7 +67,7 @@ Array& Array::operator =(const Array& c)
 	_fortran_order = c._fortran_order;
 	_size = c._size;
 
-	_data.reset(new base_t[_size * _descr_size], std::default_delete<base_t[]>())
+	_data.reset(new base_t[_size * _descr_size], std::default_delete<base_t[]>());
 	memcpy(_data.get(), c._data.get(), _size * _descr_size);
 
 	return *this;
@@ -135,18 +137,19 @@ void Array::load(std::istream& st)
 	//read header len, little endian uint16
 	size_t header_len = 0;
 
-#ifdef NUMPY_BE
-	size_t w = 1;
-	for(size_t i = 0; i < hls; i++) //read it one byte by one byte to avoid endianness problem
+	if(IS_BIG_ENDIAN)
 	{
-		uint8_t t;
-		st.read(reinterpret_cast<char*>(&t), 1);
-		header_len += t * w;
-		w *= 256;
+		size_t w = 1;
+		for(size_t i = 0; i < hls; i++) //read it one byte by one byte to avoid endianness problem
+		{
+			uint8_t t;
+			st.read(reinterpret_cast<char*>(&t), 1);
+			header_len += t * w;
+			w *= 256;
+		}
 	}
-#else
-	st.read(reinterpret_cast<char*>(&header_len), static_cast<std::streamsize>(hls));
-#endif
+	else
+		st.read(reinterpret_cast<char*>(&header_len), static_cast<std::streamsize>(hls));
 
 	//Read the header
 	std::string header(header_len, 0);
@@ -158,11 +161,14 @@ void Array::load(std::istream& st)
 	st.read(reinterpret_cast<char*>(_data.get()), static_cast<std::streamsize>(_size * _descr_size));
 
 	//re-order bytes for the system
-#ifdef NUMPY_BE
-	if(o == '<')
-#else
-	if(o == '>')
-#endif
+	bool swap = false;
+
+	if(IS_BIG_ENDIAN)
+		swap = o == '<';
+	else
+		swap = o == '>';
+
+	if(swap)
 	{
 		base_t* p = _data.get();
 		for(size_t i = 0; i < _size; i++)
@@ -315,28 +321,29 @@ void Array::save(std::ostream& st)
 
 	//little endian uint16 / uint32 representing header size;
 	char* c = reinterpret_cast<char*>(&s);
-#ifdef NUMPY_BE
 	size_t ts = sizeof (size_t);
-#endif
+
 	if(v == 1)
 	{
-#ifdef NUMPY_BE
-		st.write(c+ts-1, 1);
-		st.write(c+ts-2, 1);
-#else
-		st.write(c, 2);
-#endif
+		if(IS_BIG_ENDIAN)
+		{
+			st.write(c+ts-1, 1);
+			st.write(c+ts-2, 1);
+		}
+		else
+			st.write(c, 2);
 	}
 	else
 	{
-#ifdef NUMPY_BE
-		st.write(c+ts-1, 1);
-		st.write(c+ts-2, 1);
-		st.write(c+ts-3, 1);
-		st.write(c+ts-4, 1);
-#else
-		st.write(c, 4);
-#endif
+		if(IS_BIG_ENDIAN)
+		{
+			st.write(c+ts-1, 1);
+			st.write(c+ts-2, 1);
+			st.write(c+ts-3, 1);
+			st.write(c+ts-4, 1);
+		}
+		else
+			st.write(c, 4);
 	}
 
 	st.write(h.c_str(), static_cast<std::streamsize>(h.size()));
@@ -353,11 +360,7 @@ std::string Array::build_header()
 	if(_descr_size == 1)
 		h += '|';
 	else
-#ifdef NUMPY_BE
-		h += '>';
-#else
-		h += '<';
-#endif
+		h += IS_BIG_ENDIAN ? '>' : '<';
 
 	h += get_type();
 
@@ -459,7 +462,7 @@ void Npz::remove(const std::string& fn)
 bool Npz::canBeMapped()
 {
 	Array& f = _arrays.begin()->second;
-	return std::all_of(_arrays.begin(), _arrays.end(), [&](const std::pair<std::string, Array>& e) {
+	return std::all_of(++_arrays.begin(), _arrays.end(), [&](const std::pair<std::string, Array>& e) {
 		return e.second._shape == f._shape;
 	});
 }
