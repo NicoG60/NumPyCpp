@@ -202,7 +202,7 @@ public:
 
 		std::map<K,V> r;
 		for(size_t i = 0; i < keys.size(); i++)
-			r[keys.get<K>(i)] = values.get<V>(i);
+			r[keys.at<K>(i)] = values.at<V>(i);
 
 		return r;
 	}
