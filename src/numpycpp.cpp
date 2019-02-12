@@ -132,7 +132,7 @@ void Array::load(std::istream& st)
 	if		(maj == 1 && min == 0)	hls = 2; // 2 bytes for v1.0
 	else if	(maj == 2 && min == 0)	hls = 4; // 4 bytes for v2.0
 	else
-		throw std::runtime_error("sorry, I can't read that version...");
+		throw std::runtime_error(std::to_string(maj) + "." + std::to_string(min) + ": sorry, I can't read that version...");
 
 	//read header len, little endian uint16
 	size_t header_len = 0;
@@ -192,7 +192,7 @@ char Array::parse_header(std::string h)
 	std::string descr = h.substr(dp, 5);
 
 	if(!std::regex_match(descr.begin(), descr.end(), descr_check))
-		throw std::runtime_error("Sorry, I don't cover that format :(");
+		throw std::runtime_error(descr + ": Sorry, I don't cover that format :(");
 
 	char e = descr[1];
 
@@ -220,7 +220,7 @@ char Array::parse_header(std::string h)
 	}
 
 	if(!std::regex_match(shape.begin(), shape.end(), shape_check))
-		throw std::runtime_error("Wrong shape");
+		throw std::runtime_error("shape tuple not well formed");
 
 	parse_shape(shape);
 
@@ -239,7 +239,7 @@ void Array::parse_type(std::string d)
 	if(t == 'b')
 	{
 		if(d[1] != '|' || _descr_size != 1)
-			throw std::runtime_error("wrong type");
+			throw std::runtime_error(d + ": boolean can't have endianness");
 		_descr = typeid (bool);
 	}
 	else if(t == 'i')
@@ -249,7 +249,7 @@ void Array::parse_type(std::string d)
 		else if(_descr_size == sizeof (int32_t))	_descr = typeid (int32_t);
 		else if(_descr_size == sizeof (int64_t))	_descr = typeid (int64_t);
 		else
-			throw std::runtime_error("wrong type");
+			throw std::runtime_error(d + ": unhandle integer type");
 	}
 	else if(t == 'u')
 	{
@@ -258,17 +258,17 @@ void Array::parse_type(std::string d)
 		else if(_descr_size == sizeof (uint32_t))	_descr = typeid (uint32_t);
 		else if(_descr_size == sizeof (uint64_t))	_descr = typeid (uint64_t);
 		else
-			throw std::runtime_error("wrong type");
+			throw std::runtime_error(d + ": unhandle unsigned type");
 	}
 	else if(t == 'f')
 	{
 			 if(_descr_size == sizeof (float))	_descr = typeid (float);
 		else if(_descr_size == sizeof (double))	_descr = typeid (double);
 		else
-			throw std::runtime_error("wrong type");
+			throw std::runtime_error(d + ": unhandle float type");
 	}
 	else
-		throw std::runtime_error("wrong type");
+		throw std::runtime_error(d + ": wrong type");
 }
 
 void Array::parse_shape(std::string s)
@@ -404,7 +404,7 @@ char Array::get_type()
 		_descr == typeid (double))
 		return 'f';
 
-	throw std::runtime_error("unable to write this type");
+	throw std::runtime_error("unable to write the type stored in the array");
 }
 
 Npz::Npz(const std::string& fn)
@@ -423,7 +423,11 @@ void Npz::load(const std::string& fn)
 		std::string content = f.read(npy_n);
 		std::istringstream iss (content);
 		npy_n.erase(npy_n.size()-4);
-		_arrays[npy_n] = Array(iss);
+		try {
+			_arrays[npy_n] = Array(iss);
+		} catch(std::runtime_error& e) {
+			throw std::runtime_error(npy_n + " - " + e.what());
+		}
 	}
 }
 
@@ -434,8 +438,12 @@ void Npz::save(const std::string& fn)
 	for(auto e : _arrays)
 	{
 		std::stringstream st;
-		e.second.save(st);
-		f.writestr(e.first+".npy", st.str());
+		try {
+			e.second.save(st);
+			f.writestr(e.first+".npy", st.str());
+		} catch(std::runtime_error& ex) {
+			throw std::runtime_error(e.first + " - " + ex.what());
+		}
 	}
 
 	f.save(fn);
@@ -449,7 +457,7 @@ void Npz::add(const std::string& fn, const Array& a)
 Array& Npz::get(const std::string& fn)
 {
 	if(!contains(fn))
-		throw std::out_of_range("array name not found");
+		throw std::out_of_range(fn + ": array name not found");
 
 	return _arrays[fn];
 }

@@ -68,7 +68,7 @@ public:
 	T& at(size_t i)
 	{
 		if(i > _size)
-			throw std::out_of_range("Numpy Array out of range []");
+			throw std::out_of_range("Array: index out of range");
 
 		if(_descr != std::type_index(typeid (T)))
 			throw  std::bad_cast();
@@ -82,7 +82,7 @@ public:
 	T& get(std::initializer_list<size_t> l)
 	{
 		if(l.size() != _shape.size())
-			throw  std::out_of_range("Numpy Array out of rande {}");
+			throw  std::out_of_range("Array: get with list of wrong size");
 
 		if(_descr != std::type_index(typeid (T)))
 			throw  std::bad_cast();
@@ -92,7 +92,7 @@ public:
 		for(auto it = l.begin(); it != l.end(); it++)
 		{
 			if(*it >= _shape[i])
-				throw std::out_of_range("umpy Array out of rande {}");
+				throw std::out_of_range("Array: get index out of rande");
 
 			if(i == 0)
 				s += *it;
