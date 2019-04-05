@@ -76,10 +76,49 @@ public:
 		return reinterpret_cast<T*>(_data.get())[i];
 	}
 
+	template<class T>
+	const T& at(size_t i) const
+	{
+		if(i > _size)
+			throw std::out_of_range("Array: index out of range");
+
+		if(_descr != std::type_index(typeid (T)))
+			throw  std::bad_cast();
+
+		return reinterpret_cast<T*>(_data.get())[i];
+	}
+
 	// Same functionnality but different way.
 	// Take an initializer_list {x, y, z, ...} of corrdinate in the n-dimensionnal matrix
 	template<class T>
 	T& get(std::initializer_list<size_t> l)
+	{
+		if(l.size() != _shape.size())
+			throw  std::out_of_range("Array: get with list of wrong size");
+
+		if(_descr != std::type_index(typeid (T)))
+			throw  std::bad_cast();
+
+		size_t s = 0;
+		size_t i = 0;
+		for(auto it = l.begin(); it != l.end(); it++)
+		{
+			if(*it >= _shape[i])
+				throw std::out_of_range("Array: get index out of rande");
+
+			if(i == 0)
+				s += *it;
+			else
+				s += _shape[i-1]*(*it);
+
+			i++;
+		}
+
+		return reinterpret_cast<T*>(_data.get())[i];
+	}
+
+	template<class T>
+	const T& get(std::initializer_list<size_t> l) const
 	{
 		if(l.size() != _shape.size())
 			throw  std::out_of_range("Array: get with list of wrong size");
@@ -187,11 +226,13 @@ public:
 	void load(const std::string& fn); //Load from a file (erase all existing data)
 	void save(const std::string& fn); //Save to a file
 
-	void add(const std::string& fn, const Array& a); //Add an array
+	bool add(const std::string& fn, const Array& a, bool override = false); //Add an array
 	Array& get(const std::string& fn);				 //Get a reference to the array
+	const Array& get(const std::string& fn) const;
 	void remove(const std::string& fn);				 //Remove an array
+	bool move(const std::string& from, const std::string& to, bool override = false);
 
-	bool canBeMapped();	//If all arrays have the same shape, return true.
+	bool canBeMapped() const;	//If all arrays have the same shape, return true.
 
 	//Return 2 arrays in a map form, 1 array as key, the other as value
 	template<class K, class V>
@@ -207,9 +248,9 @@ public:
 		return r;
 	}
 
-	size_t size();							//Returns the number of arrays
-	bool contains(const std::string& s);	//Returns true if the array exists
-	std::vector<std::string> files();		//Return a list a array names
+	size_t size() const;						//Returns the number of arrays
+	bool contains(const std::string& s) const;	//Returns true if the array exists
+	std::vector<std::string> files() const;		//Return a list a array names
 
 protected:
 	std::map<std::string, Array> _arrays;

@@ -414,6 +414,7 @@ Npz::Npz(const std::string& fn)
 
 void Npz::load(const std::string& fn)
 {
+	_arrays.clear();
 	miniz_cpp::zip_file f;
 
 	f.load(fn);
@@ -449,17 +450,28 @@ void Npz::save(const std::string& fn)
 	f.save(fn);
 }
 
-void Npz::add(const std::string& fn, const Array& a)
+bool Npz::add(const std::string& fn, const Array& a, bool override)
 {
-	_arrays[fn] = a;
+	if(contains(fn))
+	{
+		if(!override)
+			return false;
+
+		_arrays[fn] = a;
+		return true;
+	}
+
+	return _arrays.emplace(fn, a).second;
 }
 
 Array& Npz::get(const std::string& fn)
 {
-	if(!contains(fn))
-		throw std::out_of_range(fn + ": array name not found");
+	return _arrays.at(fn);
+}
 
-	return _arrays[fn];
+const Array& Npz::get(const std::string& fn) const
+{
+	return _arrays.at(fn);
 }
 
 void Npz::remove(const std::string& fn)
@@ -467,25 +479,39 @@ void Npz::remove(const std::string& fn)
 	_arrays.erase(fn);
 }
 
-bool Npz::canBeMapped()
+bool Npz::move(const std::string& from, const std::string& to, bool override)
 {
-	Array& f = _arrays.begin()->second;
-	return std::all_of(++_arrays.begin(), _arrays.end(), [&](const std::pair<std::string, Array>& e) {
+	if(!contains(from))
+		return false;
+
+	if(!override && contains(to))
+		return false;
+
+	add(to, _arrays.at(from));
+	remove(from);
+
+	return true;
+}
+
+bool Npz::canBeMapped() const
+{
+	const Array& f = _arrays.cbegin()->second;
+	return std::all_of(++_arrays.cbegin(), _arrays.cend(), [&](const std::pair<std::string, Array>& e) {
 		return e.second._shape == f._shape;
 	});
 }
 
-size_t Npz::size()
+size_t Npz::size() const
 {
 	return _arrays.size();
 }
 
-bool Npz::contains(const std::string& s)
+bool Npz::contains(const std::string& s) const
 {
 	return _arrays.find(s) != _arrays.end();
 }
 
-std::vector<std::string> Npz::files()
+std::vector<std::string> Npz::files() const
 {
 	std::vector<std::string> r;
 	for(auto e : _arrays)
