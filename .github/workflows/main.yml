@@ -29,13 +29,9 @@ jobs:
     - name: get-cmake
       uses: lukka/get-cmake@v3.17.1
 
-    # Runs a single command using the runners shell
-    - name: build dir
-      run: mkdir build && cd build
-
     # Runs a set of commands using the runners shell
     - name: cmake
-      run: cmake ..
+      run: cmake
     
     - name: make
       run: make
