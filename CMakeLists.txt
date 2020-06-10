@@ -27,11 +27,23 @@ include_directories(./src ${MINIZ_INCLUDE} ${CATCH_INCLUDE})
 
 if(ENABLE_DYNAMIC)
     add_library(${SH_NAME} SHARED ${SRC})
+
+    if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+        target_link_libraries(${SH_NAME} stdc++fs)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
+        target_link_libraries(${SH_NAME} c++fs)
+    endif()
+
     install(TARGETS ${SH_NAME} LIBRARY DESTINATION lib PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 endif(ENABLE_DYNAMIC)
 
 if(ENABLE_STATIC)
     add_library(${ST_NAME} STATIC ${SRC})
+    if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+        target_link_libraries(${ST_NAME} stdc++fs)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
+        target_link_libraries(${ST_NAME} c++fs)
+    endif()
     set_target_properties(${ST_NAME} PROPERTIES OUTPUT_NAME ${SH_NAME})
     install(TARGETS ${ST_NAME} ARCHIVE DESTINATION lib)
 
