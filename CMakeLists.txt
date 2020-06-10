@@ -3,7 +3,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0 FATAL_ERROR)
 #Configure the project
 project(NumpyCpp)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
@@ -40,7 +40,8 @@ if(ENABLE_STATIC)
         test/main.cpp
         test/test_types.cpp
         test/test_npz.cpp
-        test/test_f16_error.cpp)
+        test/test_f16_error.cpp
+        test/test_array.cpp)
     target_link_libraries(unit_test ${ST_NAME})
     add_test(NAME AllTests COMMAND ${CMAKE_CURRENT_BINARY_DIR}/bin/unit_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
 endif(ENABLE_STATIC)

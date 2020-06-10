@@ -23,10 +23,11 @@
 #define NPZ "./files/numpy-types.npz"
 #define NPZ_GOOD "./files/numpy-good.npz"
 #define NPZ_HUGE "./files/huge.npz"
+#define NPY_HUGE "./files/huge.npy"
 
 static const char* files[] = {NPY_B,
-								NPY_I8, NPY_I16, NPY_I32, NPY_I64,
-								NPY_U8, NPY_U16, NPY_U32, NPY_U64,
-												NPY_F32, NPY_F64};
+                                NPY_I8, NPY_I16, NPY_I32, NPY_I64,
+                                NPY_U8, NPY_U16, NPY_U32, NPY_U64,
+                                                NPY_F32, NPY_F64};
 
 #endif // GLOBAL_H

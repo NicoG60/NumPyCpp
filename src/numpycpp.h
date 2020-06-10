@@ -22,240 +22,374 @@ SOFTWARE
 #ifndef NUMPYCPP_H
 #define NUMPYCPP_H
 
-#include <fstream>
+#include <cstdio>
 #include <vector>
 #include <string>
-#include <map>
-#include <memory>
+#include <unordered_map>
 #include <typeinfo>
 #include <typeindex>
+#include <filesystem>
 
 /**
  * NumPyCpp : A simple interface to .npy and .npz file
  */
 
-namespace NumPy {
+namespace np {
 
-typedef uint8_t						base_t;
-typedef std::vector<size_t>			shape_t;
-typedef std::shared_ptr<base_t>		data_t;
-typedef std::type_index				descr_t;
+enum Endianness
+{
+    BigEndian,
+    LittleEndian,
+#if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) || __WIN32
+    NativeEndian = LittleEndian,
+    OpositeEndian = BigEndian
+#else
+    NativeEndian = BigEndian,
+    OpositeEndian = LittleEndian
+#endif
+};
+
+std::uint16_t byte_swap16(std::uint16_t value);
+std::uint32_t byte_swap32(std::uint32_t value);
+std::uint64_t byte_swap64(std::uint64_t value);
+
+void byte_swap(void* value, std::size_t size);
+
+template<class T>
+T byte_swap(T value, Endianness from, Endianness to)
+{
+    if(from != to)
+        byte_swap(&value, sizeof (T));
+
+    return value;
+}
+
+
+
+//==============================================================================
+
+struct type_t
+{
+    bool operator==(const type_t& o) const;
+    bool operator!=(const type_t& o) const;
+
+    std::type_index index      = typeid (void);
+    char            ptype      = '\0';
+    std::size_t     size       = 0;
+    std::size_t     offset     = 0;
+    Endianness      endianness = NativeEndian;
+    std::string     suffix;
+
+    static type_t from_string(const std::string& str);
+    template<class T>
+    static type_t from_type()
+    {
+        type_t r;
+
+        r.index = typeid (T);
+        r.size  = sizeof (T);
+
+        return r;
+    }
+
+    std::string to_string() const;
+};
+
+struct descr_t
+{
+    std::unordered_map<std::string, type_t> fields;
+    std::size_t stride = 0;
+
+    void swap(descr_t& o);
+
+    static descr_t from_string(const std::string& str);
+    static std::string extract(std::string::iterator& it, std::string::iterator end, char b, char e);
+    static std::pair<std::string, type_t> parse_tuple(const std::string& str);
+    std::string to_string() const;
+};
+
+typedef std::vector<std::size_t> shape_t;
+
+std::string shape_to_string(const shape_t& shape);
+
+
+
+//==============================================================================
+
+
+
+class error : public std::exception
+{
+public:
+    error(const std::string& msg) : std::exception(), _msg(msg) {}
+
+    const char * what() const noexcept override { return _msg.c_str(); }
+
+private:
+    std::string _msg;
+};
+
+
+
+//==============================================================================
+
+
 
 /*
-The Array class represent one npy file (one n-dimensionnal array)
+The array class represent one npy file (one n-dimensionnal array)
 The array has a fixed size and can't be re-allocated.
 */
-class Array
+class array
 {
-	friend class Npz;
 
-protected:
-	Array(descr_t d, size_t ds, shape_t s, bool f);
-	Array(std::istream& st);
+
+
+//==============================================================================
+
+
+
+private:
+    class iterator
+    {
+        friend class array;
+
+    public:
+        typedef iterator  value_type;
+        typedef value_type&    reference;
+        typedef value_type*    pointer;
+        typedef std::ptrdiff_t difference_type;
+
+        iterator();
+        iterator(const iterator&) = default;
+        iterator(iterator&&) = default;
+
+        iterator& operator=(const iterator&) = default;
+        iterator& operator=(iterator&&) = default;
+
+        bool operator ==(const iterator& other) const;
+        bool operator !=(const iterator& other) const;
+
+        bool operator <(const iterator& other) const;
+        bool operator >(const iterator& other) const;
+        bool operator <=(const iterator& other) const;
+        bool operator >=(const iterator& other) const;
+
+        iterator& operator++();
+        iterator  operator++(int);
+        iterator  operator+(difference_type s) const;
+        iterator& operator+=(difference_type s);
+
+        iterator& operator--();
+        iterator  operator--(int);
+        difference_type operator-(const iterator& it) const;
+        iterator  operator-(difference_type s) const;
+        iterator& operator-=(difference_type s);
+
+        pointer   operator->();
+        reference operator*();
+
+        char* ptr();
+        char* ptr(const std::string& field);
+
+        const char* ptr() const;
+        const char* ptr(const std::string& field) const;
+
+        template<class T>
+        T& value()
+        {
+            if(_array->type().index != typeid (T))
+                throw error("bad type cast");
+
+            return *reinterpret_cast<T*>(ptr());
+        }
+
+        template<class T>
+        T& value(const std::string& field)
+        {
+            if(_array->type(field).index != typeid (T))
+                throw error("bad type cast");
+
+            return *reinterpret_cast<T*>(ptr(field));
+        }
+
+        template<class T>
+        const T& value() const
+        {
+            return *reinterpret_cast<const T*>(ptr());
+        }
+
+        template<class T>
+        const T& value(const std::string& field) const
+        {
+            return *reinterpret_cast<const T*>(ptr(field));
+        }
+
+    protected:
+        array*  _array;
+        char* _data;
+    };
+
+
+
+//==============================================================================
+
+
 
 public:
-	Array();						//Contruct an empty array
-	Array(const std::string& fn);	//Construct & Load an array from a file
-	Array(const Array& c);			//Copy an existing array
-
-	Array& operator =(const Array& c); //Copy an existing array
-
-	// Returns a value of type T at index i (all dimensions in line)
-	// if sizeo T == 4 bytes, so the value returned will start from 4 * i
-	// the 4 bytes after that position are returned as a T
-	// T must have the same typeid than the one stored internally
-	template<class T>
-	T& at(size_t i)
-	{
-		if(i > _size)
-			throw std::out_of_range("Array: index out of range");
-
-		if(_descr != std::type_index(typeid (T)))
-			throw  std::bad_cast();
-
-		return reinterpret_cast<T*>(_data.get())[i];
-	}
-
-	template<class T>
-	const T& at(size_t i) const
-	{
-		if(i > _size)
-			throw std::out_of_range("Array: index out of range");
-
-		if(_descr != std::type_index(typeid (T)))
-			throw  std::bad_cast();
-
-		return reinterpret_cast<T*>(_data.get())[i];
-	}
-
-	// Same functionnality but different way.
-	// Take an initializer_list {x, y, z, ...} of corrdinate in the n-dimensionnal matrix
-	template<class T>
-	T& get(std::initializer_list<size_t> l)
-	{
-		if(l.size() != _shape.size())
-			throw  std::out_of_range("Array: get with list of wrong size");
-
-		if(_descr != std::type_index(typeid (T)))
-			throw  std::bad_cast();
-
-		size_t s = 0;
-		size_t i = 0;
-		for(auto it = l.begin(); it != l.end(); it++)
-		{
-			if(*it >= _shape[i])
-				throw std::out_of_range("Array: get index out of rande");
-
-			if(i == 0)
-				s += *it;
-			else
-				s += _shape[i-1]*(*it);
-
-			i++;
-		}
-
-		return reinterpret_cast<T*>(_data.get())[i];
-	}
-
-	template<class T>
-	const T& get(std::initializer_list<size_t> l) const
-	{
-		if(l.size() != _shape.size())
-			throw  std::out_of_range("Array: get with list of wrong size");
-
-		if(_descr != std::type_index(typeid (T)))
-			throw  std::bad_cast();
-
-		size_t s = 0;
-		size_t i = 0;
-		for(auto it = l.begin(); it != l.end(); it++)
-		{
-			if(*it >= _shape[i])
-				throw std::out_of_range("Array: get index out of rande");
-
-			if(i == 0)
-				s += *it;
-			else
-				s += _shape[i-1]*(*it);
-
-			i++;
-		}
-
-		return reinterpret_cast<T*>(_data.get())[i];
-	}
-
-	// Make an array of dimension {x, y, z, ...}
-	template<class T>
-	static Array make(std::initializer_list<size_t> l)
-	{
-		return Array(typeid (T), sizeof (T), l, false);
-	}
-
-	size_t dimensions() const;		//number of dimensions
-	size_t size() const;			//number of stored items
-	size_t size(size_t d) const;	//number of item in the dimension n
-	descr_t descr() const;			//typeid of the stored items
-	size_t descr_size() const;		//sizeof the stored items
-	shape_t shape() const;			//shape of the array, size of each dimensions
-
-	void load(const std::string& fn);	//load from a file (erase all existing datas int the obejct)
-	void save(const std::string& fn);	// save to a file
-
-	// Return a the internal buffer
-	template<class T>
-	T* data()
-	{
-		if(_descr != std::type_index(typeid (T)))
-			throw  std::bad_cast();
-
-		return reinterpret_cast<T*>(_data.get());
-	}
-
-	// Return a pointer to the first element
-	template<class T>
-	T* begin()
-	{
-		return data<T>();
-	}
-
-	// Return a pointer after the last element
-	template<class T>
-	T* end()
-	{
-		return data<T>()  + _size;
-	}
-
-	// Return the buffer as a vector
-	template<class T>
-	std::vector<T> vec()
-	{
-		return std::vector<T>(begin<T>(), end<T>());
-	}
+    array();
+    array(const array& c);
+    array(array &&m);
 
 protected:
-	void load(std::istream& st);
-	char parse_header(std::string h);
-	void parse_type(std::string d);
-	void parse_shape(std::string s);
+    array(descr_t d, shape_t s, bool f);
 
-	void save(std::ostream& st);
-
-	std::string build_header();
-	char get_type();
-
-	data_t	_data;
-	shape_t	_shape;
-	descr_t	_descr;
-	size_t	_descr_size;
-	bool	_fortran_order;
-	size_t	_size;
-};
-
-
-/*
-The Npz class represent one npz file (zip file with some npy file inside)
-You can add/remove arrays to/from the existing
-you can modify the arrays
-*/
-class Npz
-{
 public:
-	Npz() {;}					//Contruct empty npz
-	Npz(const std::string& fn); //Contruct and Load from a file
+    ~array();
 
-	void load(const std::string& fn); //Load from a file (erase all existing data)
-	void save(const std::string& fn); //Save to a file
+    array& operator =(const array& c);
+    array& operator =(array&& m);
 
-	bool add(const std::string& fn, const Array& a, bool override = false); //Add an array
-	Array& get(const std::string& fn);				 //Get a reference to the array
-	const Array& get(const std::string& fn) const;
-	void remove(const std::string& fn);				 //Remove an array
-	bool move(const std::string& from, const std::string& to, bool override = false);
+    bool empty() const;
 
-	bool canBeMapped() const;	//If all arrays have the same shape, return true.
+    void swap(array& o);
 
-	//Return 2 arrays in a map form, 1 array as key, the other as value
-	template<class K, class V>
-	std::map<K,V> map(const std::string& k, const std::string& v)
-	{
-		Array& keys = _arrays[k];
-		Array& values = _arrays[v];
+    std::size_t size() const;
+    std::size_t size(std::size_t d) const;
+    std::size_t dimensions() const;
+    const shape_t& shape() const;
+    const descr_t& descr() const;
+    const type_t& type() const;
+    const type_t& type(const std::string& field) const;
+    bool fortran_order() const;
 
-		std::map<K,V> r;
-		for(size_t i = 0; i < keys.size(); i++)
-			r[keys.at<K>(i)] = values.at<V>(i);
+    const char* data() const;
 
-		return r;
-	}
+    template<class T>
+    const T* data_as() const
+    {
+        return reinterpret_cast<const T*>(_data);
+    }
 
-	size_t size() const;						//Returns the number of arrays
-	bool contains(const std::string& s) const;	//Returns true if the array exists
-	std::vector<std::string> files() const;		//Return a list a array names
+    static array load(const std::filesystem::path& file);
+    static array load(std::istream& stream);
 
-protected:
-	std::map<std::string, Array> _arrays;
+    template<class T>
+    static array make(const shape_t& shape, bool fortran_order = false)
+    {
+        descr_t d;
+        d.fields.emplace("f0", type_t::from_type<T>());
+        d.stride = sizeof (T);
+
+        return array(d, shape, fortran_order);
+    }
+
+    void save(const std::filesystem::path& file) const;
+    void save(std::ostream& stream) const;
+
+    std::string header() const;
+
+    void convert_to(Endianness e = NativeEndian);
+
+//    void transpose_order();
+
+    iterator begin();
+    const iterator begin() const;
+    const iterator cbegin() const;
+
+    iterator end();
+    const iterator end() const;
+    const iterator cend() const;
+
+    iterator operator[](std::size_t index);
+    const iterator operator[](std::size_t index) const;
+
+    iterator at(std::size_t index);
+    const iterator at(std::size_t index) const;
+
+    iterator at(std::vector<std::size_t> indices);
+    const iterator at(std::vector<std::size_t> indices) const;
+
+    template<class... Args>
+    iterator at(Args... args)
+    {
+        return at(index(args...));
+    }
+
+    template<class... Args>
+    const iterator at(Args... args) const
+    {
+        return at(index(args...));
+    }
+
+    std::size_t index(std::vector<std::size_t> indices) const;
+
+    template<class... Args>
+    std::size_t index(Args... args) const
+    {
+        if(_fortran_order)
+            return index_f_order(0, args...);
+        else
+            return index_c_order(0, args...);
+    }
+
+private:
+    std::size_t data_size() const;
+
+    template<class... Args>
+    std::size_t index_c_order(std::size_t k, std::size_t nk, Args... args) const
+    {
+        return index_c_order(k, nk) + index_c_order(k+1, args...);
+    }
+
+    template<>
+    std::size_t index_c_order(std::size_t k, std::size_t nk) const
+    {
+        if(k > _shape.size())
+            throw error("size does not match");
+
+        std::size_t l = k+1;
+        std::size_t Nl = 1;
+        for(; l < _shape.size(); l++)
+            Nl *= _shape[l];
+
+        return Nl * nk;
+    }
+
+    template<class... Args>
+    std::size_t index_f_order(std::size_t k, std::size_t nk, Args... args) const
+    {
+        return index_f_order(k, nk) + index_f_order(k+1, args...);
+    }
+
+    template<>
+    std::size_t index_f_order(std::size_t k, std::size_t nk) const
+    {
+        if(k > _shape.size())
+            throw error("size does not match");
+
+        std::size_t Nl = 1;
+        for(std::size_t l = 0; l < k; l++)
+            Nl *= _shape[l];
+
+        return Nl * nk;
+    }
+
+private:
+    char*	_data;
+    shape_t	_shape;
+    descr_t	_descr;
+    bool	_fortran_order;
 };
+
+typedef std::unordered_map<std::string, array> npz;
+
+npz npz_load(const std::filesystem::path& file);
+
+void npz_save(const npz& arrays, const std::filesystem::path& file);
 
 }
+
+void swap(np::descr_t& a, np::descr_t& b);
+void swap(np::array& a, np::array& b);
 
 #endif // NUMPYCPP_H
