@@ -11,12 +11,18 @@ namespace fs = std::filesystem;
 namespace np
 {
 
+/**
+ * @brief swap the bytes of a 16 bits value
+ */
 std::uint16_t byte_swap16(std::uint16_t value)
 {
     return ((value & 0x00ff) << 8u) |
            ((value & 0xff00) >> 8u);
 }
 
+/**
+ * @brief swap the bytes of a 32 bits value
+ */
 std::uint32_t byte_swap32(std::uint32_t value)
 {
     return ((value & 0x000000ff) << 24u) |
@@ -25,6 +31,9 @@ std::uint32_t byte_swap32(std::uint32_t value)
            ((value & 0xff000000) >> 24u);
 }
 
+/**
+ * @brief swap the bytes of a 64 bits value
+ */
 std::uint64_t byte_swap64(std::uint64_t value)
 {
     return ((value & 0x00000000000000ff) << 56u) |
@@ -37,6 +46,9 @@ std::uint64_t byte_swap64(std::uint64_t value)
            ((value & 0xff00000000000000) >> 56u);
 }
 
+/**
+ * @brief take a pointer to a value and a size and swap bytes accordingly
+ */
 void byte_swap(void* value, std::size_t size)
 {
     switch(size)
@@ -73,6 +85,9 @@ void byte_swap(void* value, std::size_t size)
 
 
 
+/**
+ * @brief returns true if the 2 types are equals
+ */
 bool type_t::operator==(const type_t& o) const
 {
     return     index      == o.index
@@ -82,11 +97,17 @@ bool type_t::operator==(const type_t& o) const
             && endianness == o.endianness;
 }
 
+/**
+ * @brief same as !(*this == o)
+ */
 bool type_t::operator!=(const type_t& o) const
 {
     return !(*this == o);
 }
 
+/**
+ * @brief parse a type string (like '<i4') and return a type_t representation
+ */
 type_t type_t::from_string(const std::string& str)
 {
     if(str.empty())
@@ -252,6 +273,9 @@ type_t type_t::from_string(const std::string& str)
     return r;
 }
 
+/**
+ * @brief transfor the type_t in a string for saving files
+ */
 std::string type_t::to_string() const
 {
     std::string r = "'";
@@ -290,12 +314,18 @@ std::string type_t::to_string() const
     return r;
 }
 
+/**
+ * @brief swap the content of 2 descriptors
+ */
 void descr_t::swap(descr_t& o)
 {
     fields.swap(o.fields);
     std::swap(stride, o.stride);
 }
 
+/**
+ * @brief parse a descriptor string as given by the numpy headers
+ */
 descr_t descr_t::from_string(const std::string& str)
 {
     descr_t r;
@@ -371,6 +401,14 @@ descr_t descr_t::from_string(const std::string& str)
     return r;
 }
 
+/**
+ * @brief Extract a string in between 2 characters (like [ ] or ( ) or ' '
+ * @param it an iterator pointing to the openning character
+ * @param end the end of the string
+ * @param b the openning character
+ * @param e the closing character
+ * @return the extracted string including the opening/closing characters
+ */
 std::string descr_t::extract(std::string::iterator& it, std::string::iterator end, char b, char e)
 {
     if(*it != b)
@@ -397,6 +435,11 @@ std::string descr_t::extract(std::string::iterator& it, std::string::iterator en
     return std::string(start, it);
 }
 
+/**
+ * @brief parse a simplu tuple ('name', 'type')
+ *
+ * any other tuple will raise an error
+ */
 std::pair<std::string, type_t> descr_t::parse_tuple(const std::string& str)
 {
     if(str.front() != '(' || str.back() != ')')
@@ -438,6 +481,11 @@ std::pair<std::string, type_t> descr_t::parse_tuple(const std::string& str)
     return {{name_view.begin(), name_view.end()}, type};
 }
 
+/**
+ * @brief return s tring representation of the descriptor
+ */
+
+// BUG: fileds ordering is wrong!!!
 std::string descr_t::to_string() const
 {
     if(fields.empty())
@@ -470,6 +518,9 @@ std::string descr_t::to_string() const
     return r;
 }
 
+/**
+ * @brief return a string representation of the shape (as a tuple)
+ */
 std::string shape_to_string(const shape_t& shape)
 {
     std::string r = "(";
@@ -505,6 +556,10 @@ bool array::iterator::operator !=(const iterator& other) const
     return !(*this == other);
 }
 
+/**
+ * @brief return true if this iterator is before other. throw an error if the
+ * two iterators does not belong to the same array
+ */
 bool array::iterator::operator <(const iterator& other) const
 {
     if(_array != other._array)
@@ -513,6 +568,10 @@ bool array::iterator::operator <(const iterator& other) const
     return _data < other._data;
 }
 
+/**
+ * @brief return true if this iterator is after other. throw an error if the
+ * two iterators does not belong to the same array
+ */
 bool array::iterator::operator >(const iterator& other) const
 {
     if(_array != other._array)
@@ -521,6 +580,10 @@ bool array::iterator::operator >(const iterator& other) const
     return _data > other._data;
 }
 
+/**
+ * @brief return true if this iterator is before or eq other. throw an error if
+ * the two iterators does not belong to the same array
+ */
 bool array::iterator::operator <=(const iterator& other) const
 {
     if(_array != other._array)
@@ -529,6 +592,10 @@ bool array::iterator::operator <=(const iterator& other) const
     return _data <= other._data;
 }
 
+/**
+ * @brief return true if this iterator is after or eq other. throw an error if
+ * the two iterators does not belong to the same array
+ */
 bool array::iterator::operator >=(const iterator& other) const
 {
     if(_array != other._array)
@@ -537,12 +604,18 @@ bool array::iterator::operator >=(const iterator& other) const
     return _data >= other._data;
 }
 
+/**
+ * @brief moves the iterator forward by 1 item
+ */
 array::iterator& array::iterator::operator++()
 {
     _data += _array->_descr.stride;
     return *this;
 }
 
+/**
+ * @brief moves the iterator forward by 1 item
+ */
 array::iterator  array::iterator::operator++(int)
 {
     iterator it = *this;
@@ -550,6 +623,9 @@ array::iterator  array::iterator::operator++(int)
     return it;
 }
 
+/**
+ * @brief moves the iterator forward by @a s item(s)
+ */
 array::iterator  array::iterator::operator+(difference_type s) const
 {
     iterator it = *this;
@@ -557,18 +633,27 @@ array::iterator  array::iterator::operator+(difference_type s) const
     return it;
 }
 
+/**
+ * @brief moves the iterator forward by @a s item(s)
+ */
 array::iterator& array::iterator::operator+=(difference_type s)
 {
     _data += s * _array->_descr.stride;
     return *this;
 }
 
+/**
+ * @brief moves the iterator backward by 1 item
+ */
 array::iterator& array::iterator::operator--()
 {
     _data -= _array->_descr.stride;
     return *this;
 }
 
+/**
+ * @brief moves the iterator backward by 1 item
+ */
 array::iterator  array::iterator::operator--(int)
 {
     iterator it = *this;
@@ -576,6 +661,10 @@ array::iterator  array::iterator::operator--(int)
     return it;
 }
 
+/**
+ * @brief return the distance between 2 iterators. throws an error if not
+ * belonging to the same array
+ */
 array::iterator::difference_type
 array::iterator::operator-(const iterator& it) const
 {
@@ -585,6 +674,9 @@ array::iterator::operator-(const iterator& it) const
     return (_data - it._data) / _array->_descr.stride;
 }
 
+/**
+ * @brief moves the iterator backward by @a s item(s)
+ */
 array::iterator array::iterator::operator-(difference_type s) const
 {
     iterator it = *this;
@@ -592,38 +684,59 @@ array::iterator array::iterator::operator-(difference_type s) const
     return it;
 }
 
+/**
+ * @brief moves the iterator backward by @a s item(s)
+ */
 array::iterator& array::iterator::operator-=(difference_type s)
 {
     _data -= s * _array->_descr.stride;
     return *this;
 }
 
+/**
+ * @brief providded for api compiance. returns itself
+ */
 array::iterator::pointer   array::iterator::operator->()
 {
     return this;
 }
 
+/**
+ * @brief providded for api compiance. returns itself
+ */
 array::iterator::reference array::iterator::operator*()
 {
     return *this;
 }
 
+/**
+ * @brief return a pointer to the item
+ */
 char* array::iterator::ptr()
 {
     return _data;
 }
 
+/**
+ * @brief return a pointer to @a field in the item
+ */
 char* array::iterator::ptr(const std::string& field)
 {
     auto& f = _array->_descr.fields.at(field);
     return _data + f.offset;
 }
 
+/**
+ * @brief return a const pointer to the item
+ */
 const char* array::iterator::ptr() const
 {
     return _data;
 }
 
+/**
+ * @brief return a const pointer to @a field in the item
+ */
 const char* array::iterator::ptr(const std::string& field) const
 {
     auto& f = _array->_descr.fields.at(field);

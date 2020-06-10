@@ -27,12 +27,14 @@ include_directories(./src ${MINIZ_INCLUDE} ${CATCH_INCLUDE})
 if(ENABLE_DYNAMIC)
     add_library(${SH_NAME} SHARED ${SRC})
     install(TARGETS ${SH_NAME} LIBRARY DESTINATION lib PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+    set_property(TARGET ${SH_NAME} PROPERTY CXX_STANDARD 17)
 endif(ENABLE_DYNAMIC)
 
 if(ENABLE_STATIC)
     add_library(${ST_NAME} STATIC ${SRC})
     set_target_properties(${ST_NAME} PROPERTIES OUTPUT_NAME ${SH_NAME})
     install(TARGETS ${ST_NAME} ARCHIVE DESTINATION lib)
+    set_property(TARGET ${ST_NAME} PROPERTY CXX_STANDARD 17)
 
     enable_testing()
 
@@ -44,6 +46,7 @@ if(ENABLE_STATIC)
         test/test_array.cpp)
     target_link_libraries(unit_test ${ST_NAME})
     add_test(NAME AllTests COMMAND ${CMAKE_CURRENT_BINARY_DIR}/bin/unit_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
+    set_property(TARGET unit_test PROPERTY CXX_STANDARD 17)
 endif(ENABLE_STATIC)
 
 if(ENABLE_STATIC OR ENABLE_DYNAMIC)

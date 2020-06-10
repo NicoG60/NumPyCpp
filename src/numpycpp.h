@@ -36,6 +36,9 @@ SOFTWARE
 
 namespace np {
 
+/**
+ * @brief The Endianness enum defines some endianness constants
+ */
 enum Endianness
 {
     BigEndian,
@@ -55,6 +58,9 @@ std::uint64_t byte_swap64(std::uint64_t value);
 
 void byte_swap(void* value, std::size_t size);
 
+/**
+ * @brief swap the bytes of any value T
+ */
 template<class T>
 T byte_swap(T value, Endianness from, Endianness to)
 {
@@ -70,6 +76,11 @@ T byte_swap(T value, Endianness from, Endianness to)
 
 
 
+/**
+ * @brief The type_t struct represents an abstract type in the array.
+ *
+ * it contains all information needed to navigate in the array.
+ */
 struct type_t
 {
     bool operator==(const type_t& o) const;
@@ -97,6 +108,10 @@ struct type_t
     std::string to_string() const;
 };
 
+/**
+ * @brief The descr_t struct represent the array descriptor with all the named
+ * fields in the array and the global stride of 1 element
+ */
 struct descr_t
 {
     std::unordered_map<std::string, type_t> fields;
@@ -110,6 +125,9 @@ struct descr_t
     std::string to_string() const;
 };
 
+/**
+ * @brief shape_t reprensents the shape of the array
+ */
 typedef std::vector<std::size_t> shape_t;
 
 std::string shape_to_string(const shape_t& shape);
@@ -120,9 +138,19 @@ std::string shape_to_string(const shape_t& shape);
 
 
 
+
 namespace details
 {
 
+/**
+ * @brief compute recursivly the index of an element in C ordering given a shape
+ * and coordinate of that element in the array
+ *
+ * @param shape the shape of the array
+ * @param k the depth of recursion
+ * @param nk the leftest corrdinate
+ * @param args the other coordinates
+ */
 template<class... Args>
 std::size_t index_c_order(const shape_t& shape, std::size_t k, std::size_t nk, Args... args)
 {
@@ -132,6 +160,15 @@ std::size_t index_c_order(const shape_t& shape, std::size_t k, std::size_t nk, A
 template<>
 std::size_t index_c_order(const shape_t& shape, std::size_t k, std::size_t nk);
 
+/**
+ * @brief compute the index of an element in Fortran ordering given a shape and
+ * coordinate of that element in the array
+ *
+ * @param shape the shape of the array
+ * @param k the depth of recursion
+ * @param nk the leftest corrdinate
+ * @param args the other coordinates
+ */
 template<class... Args>
 std::size_t index_f_order(const shape_t& shape, std::size_t k, std::size_t nk, Args... args)
 {
@@ -149,6 +186,9 @@ std::size_t index_f_order(const shape_t& shape, std::size_t k, std::size_t nk);
 
 
 
+/**
+ * @brief The error class is an exception object in the no namespace
+ */
 class error : public std::exception
 {
 public:
@@ -166,10 +206,9 @@ private:
 
 
 
-/*
-The array class represent one npy file (one n-dimensionnal array)
-The array has a fixed size and can't be re-allocated.
-*/
+/**
+ * @brief The array class represents the actual numpy ndarray
+ */
 class array
 {
 
@@ -179,7 +218,11 @@ class array
 
 
 
-private:
+public:
+
+    /**
+     * @brief The iterator class is used to navigate the array
+     */
     class iterator
     {
         friend class array;
@@ -225,6 +268,9 @@ private:
         const char* ptr() const;
         const char* ptr(const std::string& field) const;
 
+        /**
+         * @brief returns a ref to the item cast as T
+         */
         template<class T>
         T& value()
         {
@@ -234,6 +280,9 @@ private:
             return *reinterpret_cast<T*>(ptr());
         }
 
+        /**
+         * @brief returns a ref to @a field in the item cast as T
+         */
         template<class T>
         T& value(const std::string& field)
         {
@@ -243,12 +292,18 @@ private:
             return *reinterpret_cast<T*>(ptr(field));
         }
 
+        /**
+         * @brief returns a const ref to the item cast as T
+         */
         template<class T>
         const T& value() const
         {
             return *reinterpret_cast<const T*>(ptr());
         }
 
+        /**
+         * @brief returns a const ref to @a field in the item cast as T
+         */
         template<class T>
         const T& value(const std::string& field) const
         {
