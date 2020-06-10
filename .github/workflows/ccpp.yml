@@ -17,8 +17,8 @@ jobs:
     - name: submodules
       run: git submodule init && git submodule update
       
-    - uses: cmake .
+    - run: cmake .
 
-    - uses: make
+    - run: make
 
-    - uses: cmake test
+    - run: cmake test
