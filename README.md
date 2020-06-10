@@ -1,5 +1,7 @@
 # NumPyCpp
  A simple library to read and save Numpy npy and npz files.
+ 
+ ![C/C++ CI](https://github.com/NicoG60/NumPyCpp/workflows/C/C++%20CI/badge.svg?branch=master)
 
 ## Building
 ```console
@@ -13,58 +15,58 @@ make install
 
 Read a simple array
 ```cpp
-NumPy::Array a("./your/file.npy");
+np::array a("./your/file.npy");
 
 // Get a value by its index
-float v1 = a.at<float>(0);
+float v1 = a.at(0).value<float>();
 
 // Get a value by its coordinates
-float v2 = a.get<float>({1, 2, 3});
-
-// Get all values in a vector
-auto vec = a.vec<float>();
+float v2 = a.at(1, 2, 3).value<float>();
 
 //Modify a value
-a.at<float>(0) = 123;
+a.at(0).value<float>() = 123;
+```
+
+Read a structured array
+```cpp
+np::array a("./your/structured.npy");
+
+// Get a value by its index
+float v1 = a.at(0).value<float>("my_field_name");
+
+// Get a value by its coordinates
+float v2 = a.at(1, 2, 3).value<float>("my_field_name");
+
+//Modify a value
+a.at(0).value<float>("my_field_name") = 123;
 ```
 
 Create an array
 ```cpp
-// Make an empty 3D int matrix of size 3
-NumPy::Array a = NumPy::Array::make<int>({3, 3, 3});
+// Make an empty 3D int array of size 3
+np::array a = np::array::make<int>({3, 3, 3});
 
 //Modify it
-a.get<int>({1, 2, 3}) = 123;
+a.at(1, 2, 3).value<int>() = 123;
 
 //save it
 a.save("./save/file.npy");
 ```
 
-Npz files
+Npz files are bound to `std::unordered_map<std::string, np::array>`
 ```cpp
-NumPy::Npz z;
+auto z = np::npz_load("./your/file.npz");
 
-//load
-z.load("./your/file.npz");
+for(auto& p : z)
+{
+   std::cout << "array name: " << p.first << std::endl;
+   np::array& a = p.second;
+   
+   //Do stuff with the array
+}
 
-//get all arrays names
-auto names = z.files();
+// Add a new array
+z.emplace("new_name", np::array::make<int>({3, 3, 3}));
 
-//Use references to modify the arrays
-NumPy::Array& a = z.get(names[0]);
-
-a.at<float>(0) = 1.23;
-
-//Create a new array
-NumPy::Array b = NumPy::Array::make<int>({100});
-
-for(size_t i = 0; i < b.size(); i++)
-	b.at<int>(i) = i;
-
-// Add the new array to the existing
-z.add("100ints", b);
-
-//Save it
-z.save("./your/new_file.npz");
-
+np::npz_save(z, "./new/name.npz");
 ```
