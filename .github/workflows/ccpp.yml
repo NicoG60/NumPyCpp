@@ -17,7 +17,7 @@ jobs:
     - name: submodules
       run: git submodule init && git submodule update
       
-    - end:
+    - env:
         CC: /usr/bin/gcc-8.4
         CXX: /usr/bin/g++-8.4
       run: cmake .
