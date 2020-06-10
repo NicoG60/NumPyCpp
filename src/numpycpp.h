@@ -68,6 +68,8 @@ T byte_swap(T value, Endianness from, Endianness to)
 
 //==============================================================================
 
+
+
 struct type_t
 {
     bool operator==(const type_t& o) const;
@@ -111,6 +113,35 @@ struct descr_t
 typedef std::vector<std::size_t> shape_t;
 
 std::string shape_to_string(const shape_t& shape);
+
+
+
+//==============================================================================
+
+
+
+namespace details
+{
+
+template<class... Args>
+std::size_t index_c_order(const shape_t& shape, std::size_t k, std::size_t nk, Args... args)
+{
+    return index_c_order(shape, k, nk) + index_c_order(shape, k+1, args...);
+}
+
+template<>
+std::size_t index_c_order(const shape_t& shape, std::size_t k, std::size_t nk);
+
+template<class... Args>
+std::size_t index_f_order(const shape_t& shape, std::size_t k, std::size_t nk, Args... args)
+{
+    return index_f_order(shape, k, nk) + index_f_order(shape, k+1, args...);
+}
+
+template<>
+std::size_t index_f_order(const shape_t& shape, std::size_t k, std::size_t nk);
+
+}
 
 
 
@@ -327,52 +358,13 @@ public:
     std::size_t index(Args... args) const
     {
         if(_fortran_order)
-            return index_f_order(0, args...);
+            return np::details::index_f_order(_shape, 0, args...);
         else
-            return index_c_order(0, args...);
+            return np::details::index_c_order(_shape, 0, args...);
     }
 
 private:
     std::size_t data_size() const;
-
-    template<class... Args>
-    std::size_t index_c_order(std::size_t k, std::size_t nk, Args... args) const
-    {
-        return index_c_order(k, nk) + index_c_order(k+1, args...);
-    }
-
-    template<>
-    std::size_t index_c_order(std::size_t k, std::size_t nk) const
-    {
-        if(k > _shape.size())
-            throw error("size does not match");
-
-        std::size_t l = k+1;
-        std::size_t Nl = 1;
-        for(; l < _shape.size(); l++)
-            Nl *= _shape[l];
-
-        return Nl * nk;
-    }
-
-    template<class... Args>
-    std::size_t index_f_order(std::size_t k, std::size_t nk, Args... args) const
-    {
-        return index_f_order(k, nk) + index_f_order(k+1, args...);
-    }
-
-    template<>
-    std::size_t index_f_order(std::size_t k, std::size_t nk) const
-    {
-        if(k > _shape.size())
-            throw error("size does not match");
-
-        std::size_t Nl = 1;
-        for(std::size_t l = 0; l < k; l++)
-            Nl *= _shape[l];
-
-        return Nl * nk;
-    }
 
 private:
     char*	_data;

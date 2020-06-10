@@ -17,8 +17,6 @@ jobs:
     - name: submodules
       run: git submodule init && git submodule update
       
-    - run: ls /usr/bin
-      
     - env:
         CC: /usr/bin/gcc-8
         CXX: /usr/bin/g++-8
