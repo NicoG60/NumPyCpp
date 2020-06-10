@@ -20,8 +20,8 @@ jobs:
     - run: ls /usr/bin
       
     - env:
-        CC: /usr/bin/gcc-8.4
-        CXX: /usr/bin/g++-8.4
+        CC: /usr/bin/gcc-8
+        CXX: /usr/bin/g++-8
       run: cmake .
 
     - run: make
