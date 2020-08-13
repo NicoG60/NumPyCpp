@@ -11,7 +11,7 @@ TEMPLATE_TEST_CASE("Open npz file", "[npz]",
                    float, double)
 {
     np::npz z = np::npz_load(NPZ_GOOD);
-    
+
     for(auto& p : z)
     {
         np::array& a = p.second;
@@ -66,7 +66,7 @@ TEMPLATE_TEST_CASE("Open npz file", "[npz]",
         for(size_t i = 0; i < a.size(); i++)
             REQUIRE(d[i] == 0);
 
-        REQUIRE_THROWS(a.at({3, 3, 3}));
-        REQUIRE_NOTHROW(a.at({0, 1, 2}));
+        REQUIRE_THROWS(a.at(3, 3, 3));
+        REQUIRE_NOTHROW(a.at(0, 1, 2));
     }
 }

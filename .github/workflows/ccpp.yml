@@ -13,15 +13,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    
-    - name: submodules
-      run: git submodule init && git submodule update
+      with:
+        submodules: true
       
     - env:
         CC: /usr/bin/gcc-8
         CXX: /usr/bin/g++-8
       run: cmake .
 
-    - run: make
+    - run: make -j $(nproc --all)
 
     - run: make test

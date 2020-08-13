@@ -392,8 +392,8 @@ public:
     iterator at_index(std::size_t index);
     const iterator at_index(std::size_t index) const;
 
-    iterator at_index(std::vector<std::size_t> indices);
-    const iterator at_index(std::vector<std::size_t> indices) const;
+//    iterator at_index(std::vector<std::size_t> indices);
+//    const iterator at_index(std::vector<std::size_t> indices) const;
 
     template<class... Args>
     iterator at(Args... args)

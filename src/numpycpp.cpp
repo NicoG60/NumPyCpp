@@ -1142,15 +1142,15 @@ const array::iterator array::at_index(std::size_t index) const
     return it;
 }
 
-array::iterator array::at_index(std::vector<std::size_t> indices)
-{
-    return at(index(indices));
-}
+//array::iterator array::at_index(std::vector<std::size_t> indices)
+//{
+//    return at(index(indices));
+//}
 
-const array::iterator array::at_index(std::vector<std::size_t> indices) const
-{
-    return at(index(indices));
-}
+//const array::iterator array::at_index(std::vector<std::size_t> indices) const
+//{
+//    return at(index(indices));
+//}
 
 std::size_t array::index(std::vector<std::size_t> indices) const
 {
