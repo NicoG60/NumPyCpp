@@ -3,65 +3,74 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0 FATAL_ERROR)
 #Configure the project
 project(NumpyCpp)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+if(NOT DEFINED CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    set(CMAKE_CXX_EXTENSIONS OFF)
+endif()
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+if(CMAKE_CXX_STANDARD LESS 17)
+    message(FATAL_ERROR "CMAKE_CXX_STANDARD is less than 17, NumpyCpp only works with C++17 and above.")
+endif()
 
-option(ENABLE_STATIC "Build static (.a) library" ON)
-option(ENABLE_DYNAMIC "Build dynamic lib" OFF)
+option(ENABLE_STATIC  "Build static library"  ON)
+option(ENABLE_DYNAMIC "Build dynamic library" ON)
+option(ENABLE_TESTING "Build the unit tests"  ON)
 
-#Variables
-set(TP_DIR ./third_party)
-set(MINIZ_INCLUDE ${TP_DIR}/miniz-cpp)
-set(CATCH_INCLUDE ${TP_DIR}/Catch2/single_include)
+set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(TP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
 
-set(SRC ./src/numpycpp.cpp)
-set(SH_NAME ${PROJECT_NAME})
-set(ST_NAME ${PROJECT_NAME}-static)
+set(INTERFACE_TARGET ${PROJECT_NAME})
+set(STATIC_TARGET    ${PROJECT_NAME}-static)
+set(DYNAMIC_TARGET   ${PROJECT_NAME}-dynamic)
+set(TEST_TARGET      ${PROJECT_NAME}-test)
 
-#Binaries
-include_directories(./src ${MINIZ_INCLUDE} ${CATCH_INCLUDE})
+include_directories(${SRC_DIR})
+
+add_library(${INTERFACE_TARGET} INTERFACE)
+target_sources(${INTERFACE_TARGET} INTERFACE ${SRC_DIR}/numpycpp.cpp)
+target_include_directories(${INTERFACE_TARGET} INTERFACE ${TP_DIR}/miniz-cpp)
 
 if(ENABLE_DYNAMIC)
-    add_library(${SH_NAME} SHARED ${SRC})
+    add_library(${DYNAMIC_TARGET} SHARED)
+    target_link_libraries(${DYNAMIC_TARGET} ${INTERFACE_TARGET})
+    set_target_properties(${DYNAMIC_TARGET} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 
     if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
-        target_link_libraries(${SH_NAME} stdc++fs)
+        target_link_libraries(${DYNAMIC_TARGET} stdc++fs)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
-        target_link_libraries(${SH_NAME} c++fs)
+        target_link_libraries(${DYNAMIC_TARGET} c++fs)
     endif()
-
-    install(TARGETS ${SH_NAME} LIBRARY DESTINATION lib PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 endif(ENABLE_DYNAMIC)
 
 if(ENABLE_STATIC)
-    add_library(${ST_NAME} STATIC ${SRC})
-    if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
-        target_link_libraries(${ST_NAME} stdc++fs)
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
-        target_link_libraries(${ST_NAME} c++fs)
-    endif()
-    set_target_properties(${ST_NAME} PROPERTIES OUTPUT_NAME ${SH_NAME})
-    install(TARGETS ${ST_NAME} ARCHIVE DESTINATION lib)
+    add_library(${STATIC_TARGET} STATIC)
+    target_link_libraries(${STATIC_TARGET} ${INTERFACE_TARGET})
+    set_target_properties(${STATIC_TARGET} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 
+    if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+        target_link_libraries(${STATIC_TARGET} stdc++fs)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
+        target_link_libraries(${STATIC_TARGET} c++fs)
+    endif()
+endif(ENABLE_STATIC)
+
+if(ENABLE_TESTING)
     enable_testing()
 
-    add_executable(unit_test
+    add_subdirectory(${TP_DIR}/Catch2)
+    add_executable(${TEST_TARGET}
         test/main.cpp
         test/test_types.cpp
         test/test_npz.cpp
         test/test_f16_error.cpp
         test/test_array.cpp)
-    target_link_libraries(unit_test ${ST_NAME})
-    add_test(NAME AllTests COMMAND ${CMAKE_CURRENT_BINARY_DIR}/bin/unit_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
-endif(ENABLE_STATIC)
+    target_link_libraries(${TEST_TARGET} ${INTERFACE_TARGET} Catch2::Catch2)
 
-if(ENABLE_STATIC OR ENABLE_DYNAMIC)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/numpycpp.h ${CMAKE_CURRENT_BINARY_DIR}/include/numpycpp.h COPYONLY)
-    install(FILES "numpycpp.h" DESTINATION include)
-endif()
+    include(CTest)
+    include(${TP_DIR}/Catch2/contrib/Catch.cmake)
+
+    catch_discover_tests(${TEST_TARGET} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
+endif(ENABLE_TESTING)
 
 
