@@ -389,22 +389,22 @@ public:
     iterator operator[](std::size_t index);
     const iterator operator[](std::size_t index) const;
 
-    iterator at(std::size_t index);
-    const iterator at(std::size_t index) const;
+    iterator at_index(std::size_t index);
+    const iterator at_index(std::size_t index) const;
 
-    iterator at(std::vector<std::size_t> indices);
-    const iterator at(std::vector<std::size_t> indices) const;
+    iterator at_index(std::vector<std::size_t> indices);
+    const iterator at_index(std::vector<std::size_t> indices) const;
 
     template<class... Args>
     iterator at(Args... args)
     {
-        return at(index(args...));
+        return at_index(index(args...));
     }
 
     template<class... Args>
     const iterator at(Args... args) const
     {
-        return at(index(args...));
+        return at_index(index(args...));
     }
 
     std::size_t index(std::vector<std::size_t> indices) const;

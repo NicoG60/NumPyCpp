@@ -1,33 +1,35 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
-#include <numpycpp.h>
+#include <array>
+#include <filesystem>
+namespace fs = std::filesystem;
 
-#define FOLDER "./files/numpy-types"
+extern const fs::path FILES_DIR;
 
-#define NPY_B	FOLDER"/bool.npy"
-#define NPY_I8	FOLDER"/int8.npy"
-#define NPY_I16 FOLDER"/int16.npy"
-#define NPY_I32 FOLDER"/int32.npy"
-#define NPY_I64 FOLDER"/int64.npy"
-#define NPY_U8	FOLDER"/uint8.npy"
-#define NPY_U16 FOLDER"/uint16.npy"
-#define NPY_U32 FOLDER"/uint32.npy"
-#define NPY_U64 FOLDER"/uint64.npy"
-#define NPY_F16 FOLDER"/float16.npy"
-#define NPY_F32 FOLDER"/float32.npy"
-#define NPY_F64 FOLDER"/float64.npy"
+extern const fs::path TYPE_DIR;
 
-#define NPY_SIZE 11
+extern const fs::path NPY_B;
 
-#define NPZ "./files/numpy-types.npz"
-#define NPZ_GOOD "./files/numpy-good.npz"
-#define NPZ_HUGE "./files/huge.npz"
-#define NPY_HUGE "./files/huge.npy"
+extern const fs::path NPY_I8;
+extern const fs::path NPY_I16;
+extern const fs::path NPY_I32;
+extern const fs::path NPY_I64;
 
-static const char* files[] = {NPY_B,
-                                NPY_I8, NPY_I16, NPY_I32, NPY_I64,
-                                NPY_U8, NPY_U16, NPY_U32, NPY_U64,
-                                                NPY_F32, NPY_F64};
+extern const fs::path NPY_U8;
+extern const fs::path NPY_U16;
+extern const fs::path NPY_U32;
+extern const fs::path NPY_U64;
+
+extern const fs::path NPY_F16;
+extern const fs::path NPY_F32;
+extern const fs::path NPY_F64;
+
+extern const fs::path NPZ;
+extern const fs::path NPZ_GOOD;
+extern const fs::path NPZ_HUGE;
+extern const fs::path NPY_HUGE;
+
+extern const std::array<fs::path, 11> NPY_TYPE_FILES;
 
 #endif // GLOBAL_H

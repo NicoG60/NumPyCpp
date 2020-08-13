@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0 FATAL_ERROR)
 
 #Configure the project
-project(NumpyCpp)
+project(NumPyCpp)
 
 if(NOT DEFINED CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 17)
@@ -60,11 +60,13 @@ if(ENABLE_TESTING)
 
     add_subdirectory(${TP_DIR}/Catch2)
     add_executable(${TEST_TARGET}
-        test/main.cpp
-        test/test_types.cpp
-        test/test_npz.cpp
-        test/test_f16_error.cpp
-        test/test_array.cpp)
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/main.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/global.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/test_types.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/test_npz.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/test_f16_error.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/test_array.cpp
+    )
     target_link_libraries(${TEST_TARGET} ${INTERFACE_TARGET} Catch2::Catch2)
 
     include(CTest)

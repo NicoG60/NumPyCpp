@@ -1110,15 +1110,15 @@ const array::iterator array::cend() const
 
 array::iterator array::operator[](std::size_t index)
 {
-    return at(index);
+    return at_index(index);
 }
 
 const array::iterator array::operator[](std::size_t index) const
 {
-    return at(index);
+    return at_index(index);
 }
 
-array::iterator array::at(std::size_t index)
+array::iterator array::at_index(std::size_t index)
 {
     if(index >= size())
         throw error("out of range");
@@ -1130,7 +1130,7 @@ array::iterator array::at(std::size_t index)
     return it;
 }
 
-const array::iterator array::at(std::size_t index) const
+const array::iterator array::at_index(std::size_t index) const
 {
     if(index >= size())
         throw error("out of range");
@@ -1142,12 +1142,12 @@ const array::iterator array::at(std::size_t index) const
     return it;
 }
 
-array::iterator array::at(std::vector<std::size_t> indices)
+array::iterator array::at_index(std::vector<std::size_t> indices)
 {
     return at(index(indices));
 }
 
-const array::iterator array::at(std::vector<std::size_t> indices) const
+const array::iterator array::at_index(std::vector<std::size_t> indices) const
 {
     return at(index(indices));
 }

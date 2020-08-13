@@ -1,47 +1,131 @@
 # NumPyCpp
  A simple library to read and save Numpy npy and npz files.
- 
+
  ![C/C++ CI](https://github.com/NicoG60/NumPyCpp/workflows/C/C++%20CI/badge.svg?branch=master)
 
+
+
 ## Building
-```console
+
+You'll need a `c++17` compatible compiler as it depends on the `std::filesystem`  standard library.
+
+The following commands should build:
+
+- The unit tests
+- The shared library
+- The static library
+
+```bash
 git submodule init && git submodule update
 mkdir build && cd build
 cmake .. && make && make test
-make install
 ```
+
+
+
+You can disabled some of it at configuration time:
+
+```bash
+cmake -DENABLE_STATIC=OFF -DENABLE_DYNAMIC=OFF -DENABLE_TESTING=OFF ..
+```
+
+
+
+## CMake integration
+
+You can easily  integrate it to CMake as a subdirectory.
+
+It creates an `INTERFACE` target you can link against. You dont even have to build the static or shared libraries.
+
+```cmake
+add_subdirectory(path/to/NumPyCpp EXCLUDE_FROM_ALL) # Exclude libs and tests from the built
+target_link_libraries(${YOUR_TARGET} NumPyCpp) # just link the interface and you're done
+```
+
+
 
 ## Usage
 
-Read a simple array
+Don't forget to
+
+```cpp
+#include <numpycpp.h>
+```
+
+
+
+Read a simple array (Let's say it's an array of floats)
+
 ```cpp
 np::array a("./your/file.npy");
 
+// ==== Read values
+
 // Get a value by its index
-float v1 = a.at(0).value<float>();
+float v1 = a[0].value<float>();
+
+// This is equivalent to
+v1 = a.at_index(0).value<float>();
 
 // Get a value by its coordinates
+// for n-dimensionnal arrays
 float v2 = a.at(1, 2, 3).value<float>();
 
-//Modify a value
-a.at(0).value<float>() = 123;
+// Note that although at() and at_index()
+// are equivalent for 1-dim arrays,
+// at_index() is more efficient.
+
+// ==== Modify a value
+
+a[0].value<float>() = 123.0;
+a.at(1, 2, 3).value<float>() = 123.0;
+
+// ==== Iterate
+for(auto& it : a)
+{
+  it.value<float>() += 123.0;
+}
 ```
 
+
+
 Read a structured array
+
 ```cpp
 np::array a("./your/structured.npy");
 
+// ==== Read values
+
 // Get a value by its index
-float v1 = a.at(0).value<float>("my_field_name");
+float v1 = a[0].value<float>("my_data");
+
+// This is equivalent to
+v1 = a.at_index(0).value<float>("my_data");
 
 // Get a value by its coordinates
-float v2 = a.at(1, 2, 3).value<float>("my_field_name");
+// for n-dimensionnal arrays
+float v2 = a.at(1, 2, 3).value<float>("my_data");
 
-//Modify a value
-a.at(0).value<float>("my_field_name") = 123;
+// Note that although at() and at_index()
+// are equivalent for 1-dim arrays,
+// at_index() is more efficient.
+
+// ==== Modify a value
+
+a[0].value<float>("my_data") = 123.0;
+a.at(1, 2, 3).value<float>("my_data") = 123.0;
+
+// ==== Iterate
+for(auto& it : a)
+{
+  it.value<float>("my_data") += 123.0;
+}
 ```
 
-Create an array
+
+
+At the moment you can create simple arrays but not structure one. sorry.
+
 ```cpp
 // Make an empty 3D int array of size 3
 np::array a = np::array::make<int>({3, 3, 3});
@@ -53,7 +137,10 @@ a.at(1, 2, 3).value<int>() = 123;
 a.save("./save/file.npy");
 ```
 
+
+
 Npz files are bound to `std::unordered_map<std::string, np::array>`
+
 ```cpp
 auto z = np::npz_load("./your/file.npz");
 

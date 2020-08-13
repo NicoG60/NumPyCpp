@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
+#include <numpycpp.h>
 #include "global.h"
-
 
 TEMPLATE_TEST_CASE("Open simple file", "[npy]",
                    bool,
@@ -10,10 +10,9 @@ TEMPLATE_TEST_CASE("Open simple file", "[npy]",
                    int64_t, uint64_t,
                    float, double)
 {
-    for(int f = 0; f < NPY_SIZE; f++)
+    for(const auto& f : NPY_TYPE_FILES)
     {
-        std::string fn(files[f]);
-        np::array a = np::array::load(fn);
+        np::array a = np::array::load(f);
 
         REQUIRE(a.dimensions() == 1);
         REQUIRE(a.size() == 5);
@@ -51,28 +50,11 @@ TEMPLATE_TEST_CASE("Open simple file", "[npy]",
         }
         else
             REQUIRE_THROWS(a[0].value<TestType>());
-
-
-        a = np::array::make<TestType>({3, 3, 3});
-
-        REQUIRE(a.dimensions() == 3);
-        REQUIRE(a.size(0) == 3);
-        REQUIRE(a.size(1) == 3);
-        REQUIRE(a.size(2) == 3);
-        REQUIRE(a.size() == 27);
-
-        const TestType* d = a.data_as<TestType>();
-        for(size_t i = 0; i < a.size(); i++)
-            REQUIRE(d[i] == 0);
-
-        REQUIRE_THROWS(a.at({3, 3, 3}));
-        REQUIRE_NOTHROW(a.at({0, 1, 2}));
-
-        a.save(fn + "_test");
-
-        np::array b = np::array::load(fn + "_test");
     }
+}
 
+TEST_CASE("Open huge file", "[npy]")
+{
     np::array huge = np::array::load(NPY_HUGE);
     REQUIRE(huge.dimensions() == 1);
     REQUIRE(huge.descr().stride == 40);

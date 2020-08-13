@@ -1,5 +1,5 @@
 #include <catch2/catch.hpp>
-#include "global.h"
+#include <numpycpp.h>
 
 TEST_CASE("array unit test", "[array]")
 {
@@ -286,6 +286,34 @@ TEST_CASE("array unit test", "[array]")
                 {
                     REQUIRE(a.at(x, y, z).value<int>() == test);
                     test++;
+                }
+            }
+        }
+    }
+
+    SECTION("Data access")
+    {
+        np::array a = np::array::make<int>({3, 3, 3});
+
+        for(int i = 0; i < 27; i++)
+            a.at_index(i).value<int>() = i;
+
+        for(int i = 0; i < 27; i++)
+            REQUIRE(a[i].value<int>() == i);
+
+        int i = 0;
+        for(auto& v : a)
+            REQUIRE(v.value<int>() == i++);
+
+        i = 0;
+
+        for(std::size_t x = 0; x < 3; x++)
+        {
+            for(std::size_t y = 0; y < 3; y++)
+            {
+                for(std::size_t z = 0; z < 3; z++)
+                {
+                    REQUIRE(a.at(x, y, z).value<int>() == i++);
                 }
             }
         }

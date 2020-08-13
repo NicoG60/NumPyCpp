@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
+#include <numpycpp.h>
 #include "global.h"
-
 
 TEMPLATE_TEST_CASE("Open npz file", "[npz]",
                    bool,
@@ -11,6 +11,7 @@ TEMPLATE_TEST_CASE("Open npz file", "[npz]",
                    float, double)
 {
     np::npz z = np::npz_load(NPZ_GOOD);
+    
     for(auto& p : z)
     {
         np::array& a = p.second;
@@ -54,11 +55,6 @@ TEMPLATE_TEST_CASE("Open npz file", "[npz]",
 
 
         a = np::array::make<TestType>({3, 3, 3});
-    }
-
-    for(auto& p : z)
-    {
-        np::array& a = p.second;
 
         REQUIRE(a.dimensions() == 3);
         REQUIRE(a.size(0) == 3);
@@ -73,8 +69,4 @@ TEMPLATE_TEST_CASE("Open npz file", "[npz]",
         REQUIRE_THROWS(a.at({3, 3, 3}));
         REQUIRE_NOTHROW(a.at({0, 1, 2}));
     }
-
-    np::npz_save(z, NPZ_GOOD"_new");
-
-    np::npz b = np::npz_load(NPZ_GOOD"_new");
 }
