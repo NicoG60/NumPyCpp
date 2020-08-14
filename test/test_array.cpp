@@ -11,7 +11,7 @@ TEST_CASE("array unit test", "[array]")
         REQUIRE(a.dimensions() == 0);
         REQUIRE(a.size() == 0);
 
-        np::array b(np::array::make<int>({3, 3, 3}));
+        np::array b(np::descr_t::make<int>(), {3, 3, 3}, false);
 
         REQUIRE(!b.empty());
         REQUIRE(b.dimensions() == 3);
@@ -36,7 +36,7 @@ TEST_CASE("array unit test", "[array]")
         REQUIRE(a.dimensions() == 0);
         REQUIRE(a.size() == 0);
 
-        np::array b = np::array::make<int>({3, 3, 3});
+        np::array b = np::array(np::descr_t::make<int>(), {3, 3, 3});
 
         REQUIRE(!b.empty());
         REQUIRE(b.dimensions() == 3);
@@ -61,7 +61,7 @@ TEST_CASE("array unit test", "[array]")
         REQUIRE(a.dimensions() == 0);
         REQUIRE(a.size() == 0);
 
-        np::array b = np::array::make<int>({3, 3, 3});
+        np::array b = np::array(np::descr_t::make<int>(), {3, 3, 3});
 
         REQUIRE(!b.empty());
         REQUIRE(b.dimensions() == 3);
@@ -86,14 +86,14 @@ TEST_CASE("array unit test", "[array]")
         REQUIRE(a.dimensions() == 0);
         REQUIRE_THROWS(a.size(0));
         REQUIRE(a.shape().empty());
-        REQUIRE(a.descr().stride == 0);
-        REQUIRE(a.descr().fields.empty());
+        REQUIRE(a.descr().stride() == 0);
+        REQUIRE(a.descr().empty());
         REQUIRE_THROWS(a.type());
         REQUIRE_THROWS(a.type("test"));
         REQUIRE(a.fortran_order() == false);
         REQUIRE(a.data() == nullptr);
 
-        a = np::array::make<double>({3, 4, 5});
+        a = np::array(np::descr_t::make<double>(), {3, 4, 5});
 
         REQUIRE(a.size() == 60);
         REQUIRE(a.dimensions() == 3);
@@ -102,17 +102,17 @@ TEST_CASE("array unit test", "[array]")
         REQUIRE(a.size(1) == 4);
         REQUIRE(a.size(2) == 5);
         REQUIRE(a.shape().size() == 3);
-        REQUIRE(a.descr().stride == 8);
-        REQUIRE(a.descr().fields.size() == 1);
+        REQUIRE(a.descr().stride() == 8);
+        REQUIRE(a.descr().size() == 1);
         REQUIRE_NOTHROW(a.type());
         REQUIRE_THROWS(a.type("test"));
         REQUIRE_NOTHROW(a.type("f0"));
         REQUIRE(a.type() == a.type("f0"));
-        REQUIRE(a.type().index == typeid (double));
-        REQUIRE(a.type().ptype == '\0');
-        REQUIRE(a.type().size == sizeof (double));
-        REQUIRE(a.type().offset == 0);
-        REQUIRE(a.type().endianness == np::NativeEndian);
+        REQUIRE(a.type().index() == typeid (double));
+        REQUIRE(a.type().ptype() == '\0');
+        REQUIRE(a.type().size() == sizeof (double));
+        REQUIRE(a.type().offset() == 0);
+        REQUIRE(a.type().endianness() == np::NativeEndian);
         REQUIRE(a.fortran_order() == false);
         REQUIRE(a.data() != nullptr);
         REQUIRE(a.data_as<double>() != nullptr);
@@ -122,41 +122,39 @@ TEST_CASE("array unit test", "[array]")
     {
         np::type_t t;
 
-        REQUIRE(t.index      == typeid (void));
-        REQUIRE(t.ptype      == '\0');
-        REQUIRE(t.size       == 0);
-        REQUIRE(t.offset     == 0);
-        REQUIRE(t.endianness == np::NativeEndian);
-        REQUIRE(t.suffix.empty());
+        REQUIRE(t.index()      == typeid (void));
+        REQUIRE(t.ptype()      == '\0');
+        REQUIRE(t.size()       == 0);
+        REQUIRE(t.offset()     == 0);
+        REQUIRE(t.endianness() == np::NativeEndian);
+        REQUIRE(t.suffix().empty());
         REQUIRE_THROWS(t.to_string());
 
-        t.index = typeid (std::int32_t);
-        t.size  = sizeof (std::int32_t);
-        t.endianness = np::BigEndian;
+        t = np::type_t::from_type<std::int32_t>(np::BigEndian);
 
         REQUIRE_NOTHROW(t.to_string());
         REQUIRE(t.to_string() == "'>i4'");
 
         t = np::type_t::from_string("'<M8[ns]'");
 
-        REQUIRE(t.index      == typeid (std::int64_t));
-        REQUIRE(t.ptype      == 'M');
-        REQUIRE(t.size       == 8);
-        REQUIRE(t.offset     == 0);
-        REQUIRE(t.endianness == np::NativeEndian);
-        REQUIRE(t.suffix     == "[ns]");
+        REQUIRE(t.index()      == typeid (std::int64_t));
+        REQUIRE(t.ptype()      == 'M');
+        REQUIRE(t.size()       == 8);
+        REQUIRE(t.offset()     == 0);
+        REQUIRE(t.endianness() == np::LittleEndian);
+        REQUIRE(t.suffix()     == "[ns]");
 
         REQUIRE_NOTHROW(t.to_string());
         REQUIRE(t.to_string() == "'<M8[ns]'");
 
         t = np::type_t::from_string("\"<u2\"");
 
-        REQUIRE(t.index      == typeid (std::uint16_t));
-        REQUIRE(t.ptype      == 'u');
-        REQUIRE(t.size       == 2);
-        REQUIRE(t.offset     == 0);
-        REQUIRE(t.endianness == np::NativeEndian);
-        REQUIRE(t.suffix.empty());
+        REQUIRE(t.index()      == typeid (std::uint16_t));
+        REQUIRE(t.ptype()      == 'u');
+        REQUIRE(t.size()       == 2);
+        REQUIRE(t.offset()     == 0);
+        REQUIRE(t.endianness() == np::LittleEndian);
+        REQUIRE(t.suffix().empty());
 
         REQUIRE(t == np::type_t::from_string("'<u2'"));
 
@@ -182,43 +180,71 @@ TEST_CASE("array unit test", "[array]")
     {
         np::descr_t d;
 
-        REQUIRE(d.fields.empty());
-        REQUIRE(d.stride == 0);
+        REQUIRE(d.empty());
+        REQUIRE(d.stride() == 0);
 
         d = np::descr_t::from_string("'>i4'");
 
-        REQUIRE(d.fields.size() == 1);
-        REQUIRE(d.fields.begin()->first == "f0");
-        REQUIRE(d.fields.begin()->second == np::type_t::from_string("'>i4'"));
-        REQUIRE(d.stride == 4);
+        REQUIRE(d.size() == 1);
+        REQUIRE(d.begin()->first == "f0");
+        REQUIRE(d.begin()->second == np::type_t::from_string("'>i4'"));
+        REQUIRE(d.stride() == 4);
 
         d = np::descr_t::from_string("('name', '>i4',)");
 
-        REQUIRE(d.fields.size() == 1);
-        REQUIRE(d.fields.begin()->first == "name");
-        REQUIRE(d.fields.begin()->second == np::type_t::from_string("'>i4'"));
-        REQUIRE(d.stride == 4);
+        REQUIRE(d.size() == 1);
+        REQUIRE(d.begin()->first == "name");
+        REQUIRE(d.begin()->second == np::type_t::from_string("'>i4'"));
+        REQUIRE(d.stride() == 4);
 
         REQUIRE_THROWS(np::descr_t::from_string("('name', '>i4', (2,3,))"));
 
         d = np::descr_t::from_string("[('index', '<i8'), ('timestamp', '<M8[ns]'), ('swh', '<f4'), ('mwd', '<f4'), ('mwp', '<f4'), ('dwi', '<f4'), ('wind', '<f4'), ('pp1d', '<f4')]");
 
-        REQUIRE(d.fields.size() == 8);
-        REQUIRE(d.stride == 40);
-        REQUIRE(d.fields["index"].offset     == 0);
-        REQUIRE(d.fields["timestamp"].offset == 8);
-        REQUIRE(d.fields["swh"].offset       == 16);
-        REQUIRE(d.fields["mwd"].offset       == 20);
-        REQUIRE(d.fields["mwp"].offset       == 24);
-        REQUIRE(d.fields["dwi"].offset       == 28);
-        REQUIRE(d.fields["wind"].offset      == 32);
-        REQUIRE(d.fields["pp1d"].offset      == 36);
+        REQUIRE(d.size() == 8);
+        REQUIRE(d.stride() == 40);
+        REQUIRE(d["index"].offset()     == 0);
+        REQUIRE(d["timestamp"].offset() == 8);
+        REQUIRE(d["swh"].offset()       == 16);
+        REQUIRE(d["mwd"].offset()       == 20);
+        REQUIRE(d["mwp"].offset()       == 24);
+        REQUIRE(d["dwi"].offset()       == 28);
+        REQUIRE(d["wind"].offset()      == 32);
+        REQUIRE(d["pp1d"].offset()      == 36);
+
+        d.push_back<double>("TEST");
+
+        REQUIRE(d.size() == 9);
+        REQUIRE(d.stride() == 48);
+        REQUIRE(d["TEST"].offset() == 40);
+
+        d = np::descr_t::make(
+                    np::field_t::make<std::int64_t>("index"),
+                    np::field_t::make<std::int64_t>("timestamp"),
+                    np::field_t::make<float>       ("swh"),
+                    np::field_t::make<float>       ("mwd"),
+                    np::field_t::make<float>       ("mwp"),
+                    np::field_t::make<float>       ("dwi"),
+                    np::field_t::make<float>       ("wind"),
+                    np::field_t::make<float>       ("pp1d")
+                    );
+
+        REQUIRE(d.size() == 8);
+        REQUIRE(d.stride() == 40);
+        REQUIRE(d["index"].offset()     == 0);
+        REQUIRE(d["timestamp"].offset() == 8);
+        REQUIRE(d["swh"].offset()       == 16);
+        REQUIRE(d["mwd"].offset()       == 20);
+        REQUIRE(d["mwp"].offset()       == 24);
+        REQUIRE(d["dwi"].offset()       == 28);
+        REQUIRE(d["wind"].offset()      == 32);
+        REQUIRE(d["pp1d"].offset()      == 36);
     }
 
     SECTION("iterators + conversion")
     {
-        np::array a = np::array::make<int>({3, 3, 3});
-        np::array c = np::array::make<int>({3, 3, 3}, true);
+        np::array a = np::array(np::descr_t::make<int>(), {3, 3, 3});
+        np::array c = np::array(np::descr_t::make<int>(), {3, 3, 3}, true);
 
         auto it = a.begin();
         auto end = a.end();
@@ -293,7 +319,7 @@ TEST_CASE("array unit test", "[array]")
 
     SECTION("Data access")
     {
-        np::array a = np::array::make<int>({3, 3, 3});
+        np::array a = np::array(np::descr_t::make<int>(), {3, 3, 3});
 
         for(int i = 0; i < 27; i++)
             a.at_index(i).value<int>() = i;

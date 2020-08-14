@@ -17,7 +17,7 @@ TEMPLATE_TEST_CASE("Open simple file", "[npy]",
         REQUIRE(a.dimensions() == 1);
         REQUIRE(a.size() == 5);
 
-        if(std::type_index(typeid (TestType))  == a.type().index)
+        if(std::type_index(typeid (TestType))  == a.type().index())
         {
             if(typeid (TestType) == typeid (bool))
             {
@@ -57,5 +57,5 @@ TEST_CASE("Open huge file", "[npy]")
 {
     np::array huge = np::array::load(NPY_HUGE);
     REQUIRE(huge.dimensions() == 1);
-    REQUIRE(huge.descr().stride == 40);
+    REQUIRE(huge.descr().stride() == 40);
 }

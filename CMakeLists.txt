@@ -25,10 +25,12 @@ set(STATIC_TARGET    ${PROJECT_NAME}-static)
 set(DYNAMIC_TARGET   ${PROJECT_NAME}-dynamic)
 set(TEST_TARGET      ${PROJECT_NAME}-test)
 
+file(GLOB SRC ${SRC_DIR}/*.cpp)
+
 include_directories(${SRC_DIR})
 
 add_library(${INTERFACE_TARGET} INTERFACE)
-target_sources(${INTERFACE_TARGET} INTERFACE ${SRC_DIR}/numpycpp.cpp)
+target_sources(${INTERFACE_TARGET} INTERFACE ${SRC})
 target_include_directories(${INTERFACE_TARGET} INTERFACE ${TP_DIR}/miniz-cpp)
 
 if(ENABLE_DYNAMIC)

@@ -19,7 +19,7 @@ TEMPLATE_TEST_CASE("Open npz file", "[npz]",
         REQUIRE(a.dimensions() == 1);
         REQUIRE(a.size() == 5);
 
-        if(std::type_index(typeid (TestType))  == a.type().index)
+        if(std::type_index(typeid (TestType))  == a.type().index())
         {
             if(typeid (TestType) == typeid (bool))
             {
@@ -54,7 +54,7 @@ TEMPLATE_TEST_CASE("Open npz file", "[npz]",
             REQUIRE_THROWS(a[0].value<TestType>());
 
 
-        a = np::array::make<TestType>({3, 3, 3});
+        a = np::array(np::descr_t::make<TestType>(), {3, 3, 3});
 
         REQUIRE(a.dimensions() == 3);
         REQUIRE(a.size(0) == 3);
