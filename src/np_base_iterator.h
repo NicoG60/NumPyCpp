@@ -28,18 +28,27 @@ public:
 
     base_iterator() = default;
 
+    /**
+     * @brief Copy ctor
+     */
     template<bool other_is_const>
     base_iterator(const base_iterator<Array, other_is_const>& copy) :
         _array(copy._array),
         _data(copy._data)
     {}
 
+    /**
+     * @brief Move ctor
+     */
     template<bool other_is_const>
     base_iterator(base_iterator<Array, other_is_const>&& move) :
         _array(move._array),
         _data(move._data)
     {}
 
+    /**
+     * @brief copy assignment
+     */
     template<bool other_is_const>
     base_iterator& operator=(const base_iterator<Array, other_is_const>& copy)
     {
@@ -47,6 +56,9 @@ public:
         _data = copy._data;
     }
 
+    /**
+     * @brief move assignment
+     */
     template<bool other_is_const>
     base_iterator& operator=(base_iterator<Array, other_is_const>&& move)
     {
@@ -54,18 +66,30 @@ public:
         _data = move._data;
     }
 
+    /**
+     * @brief Wether the other is pointing at the same element as this.
+     * @throw a np::error if the iterator comes from another array.
+     */
     template<bool other_is_const>
     bool operator ==(const base_iterator<Array, other_is_const>& other) const
     {
         return _array == other._array && _data == other._data;
     }
 
+    /**
+     * @brief Wether the other is pointing at a different element as this.
+     * @throw a np::error if the iterator comes from another array.
+     */
     template<bool other_is_const>
     bool operator !=(const base_iterator<Array, other_is_const>& other) const
     {
         return !(*this == other);
     }
 
+    /**
+     * @brief Wether the other is pointing an element after this
+     * @throw a np::error if the iterator comes from another array.
+     */
     template<bool other_is_const>
     bool operator <(const base_iterator<Array, other_is_const>& other) const
     {
@@ -75,30 +99,48 @@ public:
         return _data < other._data;
     }
 
+    /**
+     * @brief Wether the other is pointing an element before this
+     * @throw a np::error if the iterator comes from another array.
+     */
     template<bool other_is_const>
     bool operator >(const base_iterator<Array, other_is_const>& other) const
     {
         return other < *this;
     }
 
+    /**
+     * @brief Wether the other is pointing an element before or equal to this
+     * @throw a np::error if the iterator comes from another array.
+     */
     template<bool other_is_const>
     bool operator <=(const base_iterator<Array, other_is_const>& other) const
     {
         return !(*this < other);
     }
 
+    /**
+     * @brief Wether the other is pointing an element after or equal to this
+     * @throw a np::error if the iterator comes from another array.
+     */
     template<bool other_is_const>
     bool operator >=(const base_iterator<Array, other_is_const>& other) const
     {
         return !(*this > other);
     }
 
+    /**
+     * @brief pre-increment. Make this move 1 element ahead.
+     */
     base_iterator& operator++()
     {
         _data += _array->descr().stride();
         return *this;
     }
 
+    /**
+     * @brief post increment. Make this move 1 element ahead
+     */
     base_iterator operator++(int)
     {
         base_iterator<Array, is_const> it = *this;
@@ -106,6 +148,9 @@ public:
         return it;
     }
 
+    /**
+     * @brief Return an iterator pointing @a s element ahead
+     */
     base_iterator operator+(difference_type s) const
     {
         base_iterator<Array, is_const> it = *this;
@@ -113,18 +158,27 @@ public:
         return it;
     }
 
+    /**
+     * @brief Move this @a s element ahead
+     */
     base_iterator& operator+=(difference_type s)
     {
         _data += s * _array->descr().stride();
         return *this;
     }
 
+    /**
+     * @brief pre-decrement. Move this 1 element backward
+     */
     base_iterator& operator--()
     {
         _data -= _array->descr().stride();
         return *this;
     }
 
+    /**
+     * @brief post-decrement. Move this 1 element backward
+     */
     base_iterator operator--(int)
     {
         base_iterator<Array, is_const> it = *this;
@@ -132,6 +186,9 @@ public:
         return it;
     }
 
+    /**
+     * @brief Returns the number of element between this and @a it
+     */
     template<bool other_is_const>
     difference_type operator-(const base_iterator<Array, other_is_const>& it) const
     {
@@ -141,6 +198,9 @@ public:
         return (_data - it._data) / _array->descr().stride();
     }
 
+    /**
+     * @brief Returns an iterator @a s element before this
+     */
     base_iterator operator-(difference_type s) const
     {
         base_iterator<Array, is_const> it = *this;
@@ -148,28 +208,43 @@ public:
         return it;
     }
 
+    /**
+     * @brief Move this @a s element backward
+     */
     base_iterator& operator-=(difference_type s)
     {
         _data -= s * _array->descr().stride();
         return *this;
     }
 
+    /**
+     * @brief Return this... yeah I know
+     */
     pointer operator->()
     {
         return this;
     }
 
+    /**
+     * @brief Return *this
+     */
     reference operator*()
     {
         return *this;
     }
 
+    /**
+     * @brief Returns a raw pointer of the element pointed
+     */
     template<bool is_not_const = !is_const, typename std::enable_if_t<is_not_const, int> = 0>
     char* ptr()
     {
         return _data;
     }
 
+    /**
+     * @brief Return a raw pointer to the @a field of the current element
+     */
     template<bool is_not_const = !is_const, typename std::enable_if_t<is_not_const, int> = 0>
     char* ptr(const std::string& field)
     {
@@ -177,11 +252,17 @@ public:
         return _data + f.offset();
     }
 
+    /**
+     * @brief Returns a raw constant pointer of the element pointed
+     */
     const char* ptr() const
     {
         return _data;
     }
 
+    /**
+     * @brief Return a raw constant pointer to the @a field of the current element
+     */
     const char* ptr(const std::string& field) const
     {
         auto& f = _array->descr()[field];
@@ -189,7 +270,7 @@ public:
     }
 
     /**
-     * @brief returns a ref to the item cast as T
+     * @brief returns a reference to the current element cast as T
      */
     template<class T, bool is_not_const = !is_const, typename std::enable_if_t<is_not_const, int> = 0>
     T& value()
@@ -201,7 +282,7 @@ public:
     }
 
     /**
-     * @brief returns a ref to @a field in the item cast as T
+     * @brief returns a reference to the @a field of the current element cast as T
      */
     template<class T, bool is_not_const = !is_const, typename std::enable_if_t<is_not_const, int> = 0>
     T& value(const std::string& field)
@@ -213,7 +294,7 @@ public:
     }
 
     /**
-     * @brief returns a const ref to the item cast as T
+     * @brief returns a constant reference to the current element cast as T
      */
     template<class T>
     const T& value() const
@@ -222,7 +303,8 @@ public:
     }
 
     /**
-     * @brief returns a const ref to @a field in the item cast as T
+     * @brief returns a constant reference to the @a field of the current
+     * element cast as T
      */
     template<class T>
     const T& value(const std::string& field) const

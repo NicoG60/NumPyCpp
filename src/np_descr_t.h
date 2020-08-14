@@ -11,6 +11,12 @@
 namespace np
 {
 
+/**
+ * @brief The field_t class represents a field in the structure descriptor.
+ *
+ * Under the hood it's just a std::pair with a static function to create it
+ * simply from a c++ type
+ */
 class field_t : public std::pair<std::string, type_t>
 {
 public:
@@ -57,6 +63,12 @@ public:
     }
 };
 
+
+
+// =============================================================================
+
+// Some private declaration
+
 class descr_t;
 
 namespace details
@@ -69,9 +81,15 @@ void make_descr_internal(descr_t* r, const field_t& field);
 
 }
 
+
+
+// =============================================================================
+
+
+
 /**
- * @brief The descr_t class represent the array descriptor with all the named
- * fields in the array and the global stride of 1 element
+ * @brief The descr_t class represent the structure descriptor with all the
+ * named fields in the array and the global stride of 1 element.
  */
 class descr_t
 {
@@ -91,12 +109,22 @@ public:
 
     void swap(descr_t& o);
 
+    /**
+     * @brief Appends a new field to the current descriptor.
+     *
+     * This is useful to create new arrays.
+     */
     template<class T>
     void push_back(std::string name = {})
     {
         push_back(type_t::from_type<T>(), name);
     }
 
+    /**
+     * @brief Appends a new field to the current descriptor.
+     *
+     * This is useful to create new arrays.
+     */
     void push_back(type_t t, std::string name = {})
     {
         if(name.empty())
@@ -108,12 +136,26 @@ public:
         _fields.emplace_back(name, t);
     }
 
+    /**
+     * @brief Makes a new descriptor from a type T with an optionnal name @a n
+     */
     template<class T>
     static descr_t make(const std::string& n = {})
     {
         return make(field_t::make<T>(n));
     }
 
+    /**
+     * @brief Makes a new descriptor from the given fields.
+     *
+     * In example:
+     * ```
+     * np::descr_t d = np::descr_t::make(
+     *     np::field_t::make<int>("my_first_field"),
+     *     np::field_t::make<double>("my_second_field")
+     * );
+     * ```
+     */
     template<class... Fields>
     static descr_t make(const field_t& field, Fields... other)
     {

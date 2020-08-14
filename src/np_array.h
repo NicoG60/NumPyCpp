@@ -46,6 +46,12 @@ public:
 
     const char* data() const;
 
+    /**
+     * @brief Returns a pointer to the raw data blob reintepreted as @a T
+     *
+     * This is useful if you know it is a linear array of a single type and want
+     * to access the data at low level.
+     */
     template<class T>
     const T* data_as() const
     {
@@ -81,6 +87,11 @@ public:
     iterator at(std::vector<std::size_t> indices);
     const_iterator at(std::vector<std::size_t> indices) const;
 
+    /**
+     * @brief Returns an iterator pointing at the coordinates @a args
+     *
+     * i.e `auto it = array.at(1, 2, 3);`
+     */
     template<class... Args,
              std::enable_if_t<std::is_integral<Args>::value>...>
     iterator at(Args... args)
@@ -88,6 +99,11 @@ public:
         return at_index(index(args...));
     }
 
+    /**
+     * @brief Returns a constant iterator pointing at the coordinates @a args
+     *
+     * i.e `auto it = array.at(1, 2, 3);`
+     */
     template<class... Args,
              std::enable_if_t<std::is_integral<Args>::value>...>
     const_iterator at(Args... args) const
@@ -97,6 +113,9 @@ public:
 
     std::size_t index(std::vector<std::size_t> indices) const;
 
+    /**
+     * @brief returns the index corresponding to the coordinates @a args
+     */
     template<class... Args>
     std::size_t index(Args... args) const
     {
@@ -106,7 +125,6 @@ public:
             return index_c_order(_shape, 0, args...);
     }
 
-private:
     std::size_t data_size() const;
 
 private:

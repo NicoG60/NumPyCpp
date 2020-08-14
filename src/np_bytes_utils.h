@@ -30,7 +30,7 @@ std::uint64_t byte_swap64(std::uint64_t value);
 void byte_swap(void* value, std::size_t size);
 
 /**
- * @brief swap the bytes of any value T
+ * @brief Swaps the bytes of any value T
  */
 template<class T>
 T byte_swap(T value, Endianness from, Endianness to)

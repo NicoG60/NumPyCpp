@@ -8,7 +8,7 @@ namespace np
 
 
 /**
- * @brief swap the bytes of a 16 bits value
+ * @brief Swaps the bytes of a 16 bits value
  */
 std::uint16_t byte_swap16(std::uint16_t value)
 {
@@ -17,7 +17,7 @@ std::uint16_t byte_swap16(std::uint16_t value)
 }
 
 /**
- * @brief swap the bytes of a 32 bits value
+ * @brief Swaps the bytes of a 32 bits value
  */
 std::uint32_t byte_swap32(std::uint32_t value)
 {
@@ -28,7 +28,7 @@ std::uint32_t byte_swap32(std::uint32_t value)
 }
 
 /**
- * @brief swap the bytes of a 64 bits value
+ * @brief Swaps the bytes of a 64 bits value
  */
 std::uint64_t byte_swap64(std::uint64_t value)
 {
@@ -43,7 +43,7 @@ std::uint64_t byte_swap64(std::uint64_t value)
 }
 
 /**
- * @brief take a pointer to a value and a size and swap bytes accordingly
+ * @brief Takes a pointer to a value and a size and swap bytes accordingly
  */
 void byte_swap(void* value, std::size_t size)
 {

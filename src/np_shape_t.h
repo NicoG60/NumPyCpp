@@ -7,7 +7,9 @@ namespace np
 {
 
 /**
- * @brief shape_t reprensents the shape of the array
+ * @brief the shape_t typedef reprensents the shape of the array
+ *
+ * It's just a vector of dimension sizes as in {d0, d1, d2, ..., dn}
  */
 typedef std::vector<std::size_t> shape_t;
 
@@ -15,8 +17,8 @@ std::string shape_to_string(const shape_t& shape);
 
 
 /**
- * @brief compute recursivly the index of an element in C ordering given a shape
- * and coordinate of that element in the array
+ * @brief Computes recursivly the index of an element in C ordering with the
+ * given a @a shape and coordinates.
  *
  * @param shape the shape of the array
  * @param k the depth of recursion
@@ -36,8 +38,8 @@ template<>
 std::size_t index_c_order(const shape_t& shape, std::size_t k, std::size_t nk);
 
 /**
- * @brief compute the index of an element in Fortran ordering given a shape and
- * coordinate of that element in the array
+ * @brief Computes the index of an element in Fortran ordering with the given
+ * shape and coordinates
  *
  * @param shape the shape of the array
  * @param k the depth of recursion

@@ -11,18 +11,33 @@ namespace fs = std::filesystem;
 namespace np
 {
 
+/**
+ * @brief Copy ctor
+ * @param c another array.
+ */
 array::array(const array& c) :
     array()
 {
     *this = c;
 }
 
+/**
+ * @brief Move ctor
+ * @param m another array.
+ */
 array::array(array&& m) :
     array()
 {
     swap(m);
 }
 
+/**
+ * @brief Constructs an array with the given property.
+ *
+ * @param d The structure descriptor.
+ * @param s The dimension shape.
+ * @param f Wether the array is in Fortran order.
+ */
 array::array(descr_t d, shape_t s, bool f) :
     _data(nullptr),
     _shape(s),
@@ -37,12 +52,18 @@ array::array(descr_t d, shape_t s, bool f) :
     }
 }
 
+/**
+ * @brief dtor
+ */
 array::~array()
 {
     if(_data)
         delete[] _data;
 }
 
+/**
+ * @brief Copy assignment.
+ */
 array& array::operator =(const array& c)
 {
     if(_data)
@@ -64,17 +85,27 @@ array& array::operator =(const array& c)
     return *this;
 }
 
+/**
+ * @brief Move assignment.
+ */
 array& array::operator =(array&& m)
 {
     swap(m);
     return *this;
 }
 
+/**
+ * @brief Returns wether the array is empty.
+ */
 bool array::empty() const
 {
     return _data == nullptr || data_size() == 0;
 }
 
+/**
+ * @brief Swap the content of 2 arrays.
+ * @param o another array.
+ */
 void array::swap(array& o)
 {
     _shape.swap(o._shape);
@@ -83,6 +114,11 @@ void array::swap(array& o)
     std::swap(_data, o._data);
 }
 
+/**
+ * @brief Returns the number of elements in the array.
+ *
+ * This is equivalent to `dim_0 * dim_1 * ... * dim_n`.
+ */
 std::size_t array::size() const
 {
     if(_shape.empty())
@@ -99,6 +135,10 @@ std::size_t array::size() const
     return s;
 }
 
+/**
+ * @brief Returns the size of the given dimension @a d.
+ * @throw an np::error if out of range.
+ */
 std::size_t array::size(std::size_t d) const
 {
     if(d >= _shape.size())
@@ -107,21 +147,41 @@ std::size_t array::size(std::size_t d) const
     return _shape[d];
 }
 
+/**
+ * @brief Returns the number of dimensions.
+ */
 std::size_t array::dimensions() const
 {
     return _shape.size();
 }
 
+/**
+ * @brief Returns the shape description.
+ *
+ * This is just a vector containing the sizes of all the dimensions i.e :
+ * `{d0, d1, ..., dn}`
+ */
 const shape_t& array::shape() const
 {
     return _shape;
 }
 
+/**
+ * @brief Returns the structure descriptor.
+ * @see np::descr_t
+ */
 const descr_t& array::descr() const
 {
     return _descr;
 }
 
+/**
+ * @brief Returns the type of the first columns of the structure.
+ *
+ * This is especially useful for unstructured array.
+ *
+ * @throw a np::error if the descriptor is empty.
+ */
 const type_t& array::type() const
 {
     if(_descr._fields.empty())
@@ -130,21 +190,39 @@ const type_t& array::type() const
     return _descr.begin()->second;
 }
 
+/**
+ * @brief Returns the type of the given @a field.
+ * @throw a np::error if the field name does not exists.
+ */
 const type_t& array::type(const std::string& field) const
 {
     return _descr[field];
 }
 
+/**
+ * @brief Wether the array is in fortran order.
+ */
 bool array::fortran_order() const
 {
     return _fortran_order;
 }
 
+/**
+ * @brief The raw pointer to the data.
+ *
+ * Note that the value returned by size() is not the size of the raw data.
+ * It is just the number of element in the array. use data_size() for that
+ * purpose.
+ */
 const char* array::data() const
 {
     return _data;
 }
 
+/**
+ * @brief Loads the given npy @a file.
+ * @throw a np::error on failure.
+ */
 array array::load(const fs::path& file)
 {
     std::ifstream st(file, std::ios_base::in | std::ios_base::binary);
@@ -155,6 +233,10 @@ array array::load(const fs::path& file)
     return load(st);
 }
 
+/**
+ * @brief Load the numpy data from the given @a strem
+ * @throw a np::error on failure.
+ */
 array array::load(std::istream& stream)
 {
     //Check the magic phrase
@@ -236,6 +318,10 @@ array array::load(std::istream& stream)
     return a;
 }
 
+/**
+ * @brief Saves the current array into @a file.
+ * @throw a np::error on failure.
+ */
 void array::save(const fs::path& file) const
 {
     std::ofstream st(file, std::ios::binary);
@@ -246,6 +332,10 @@ void array::save(const fs::path& file) const
     return save(st);
 }
 
+/**
+ * @brief Saves the current array into the given @a stream.
+ * @throw a np::error on failure
+ */
 void array::save(std::ostream& stream) const
 {
     const char* magic = "\x93NUMPY\x2\x0";
@@ -259,6 +349,9 @@ void array::save(std::ostream& stream) const
     stream.write(_data, data_size());
 }
 
+/**
+ * @brief Returns the string header of the current array.
+ */
 std::string array::header() const
 {
     return "{"
@@ -268,6 +361,9 @@ std::string array::header() const
            "}";
 }
 
+/**
+ * @brief Swap the bytes of the array in respect of @a e.
+ */
 void array::convert_to(Endianness e)
 {
     for(auto it : *this)
@@ -319,6 +415,9 @@ void array::convert_to(Endianness e)
 //    swap(tmp);
 //}
 
+/**
+ * @brief Returns an iterator pointing to the first element.
+ */
 array::iterator array::begin()
 {
     iterator it;
@@ -328,11 +427,17 @@ array::iterator array::begin()
     return it;
 }
 
+/**
+ * @brief Returns a constant iterator pointing to the first element.
+ */
 array::const_iterator array::begin() const
 {
     return cbegin();
 }
 
+/**
+ * @brief Returns a constant iterator pointing to the first element.
+ */
 array::const_iterator array::cbegin() const
 {
     iterator it;
@@ -342,6 +447,9 @@ array::const_iterator array::cbegin() const
     return it;
 }
 
+/**
+ * @brief Returns an iterator pointing past the last element.
+ */
 array::iterator array::end()
 {
     iterator it;
@@ -351,11 +459,17 @@ array::iterator array::end()
     return it;
 }
 
+/**
+ * @brief Returns a constant iterator pointing past the last element.
+ */
 array::const_iterator array::end() const
 {
     return cend();
 }
 
+/**
+ * @brief Returns a constant iterator pointing past the last element.
+ */
 array::const_iterator array::cend() const
 {
     const_iterator it;
@@ -365,16 +479,25 @@ array::const_iterator array::cend() const
     return it;
 }
 
+/**
+ * @brief Returns an iterator pointing at the element at @a index
+ */
 array::iterator array::operator[](std::size_t index)
 {
     return at_index(index);
 }
 
+/**
+ * @brief Returns a constant iterator pointing at the element at @a index
+ */
 array::const_iterator array::operator[](std::size_t index) const
 {
     return at_index(index);
 }
 
+/**
+ * @brief Returns an iterator pointing at the element at @a index
+ */
 array::iterator array::at_index(std::size_t index)
 {
     if(index >= size())
@@ -387,6 +510,9 @@ array::iterator array::at_index(std::size_t index)
     return it;
 }
 
+/**
+ * @brief Returns a constant iterator pointing at the element at @a index
+ */
 array::const_iterator array::at_index(std::size_t index) const
 {
     if(index >= size())
@@ -399,16 +525,25 @@ array::const_iterator array::at_index(std::size_t index) const
     return it;
 }
 
-//array::iterator array::at_index(std::vector<std::size_t> indices)
-//{
-//    return at(index(indices));
-//}
+/**
+ * @brief Returns an iterator pointing to the coordinates @a indices
+ */
+array::iterator array::at(std::vector<std::size_t> indices)
+{
+    return at(index(indices));
+}
 
-//array::const_iterator array::at_index(std::vector<std::size_t> indices) const
-//{
-//    return at(index(indices));
-//}
+/**
+ * @brief Returns a constant iterator pointing to the coordinates @a indices
+ */
+array::const_iterator array::at(std::vector<std::size_t> indices) const
+{
+    return at(index(indices));
+}
 
+/**
+ * @brief Returns the index of the element at coordinates @a indices
+ */
 std::size_t array::index(std::vector<std::size_t> indices) const
 {
     if(indices.size() < _shape.size())
@@ -434,6 +569,9 @@ std::size_t array::index(std::vector<std::size_t> indices) const
     return idx;
 }
 
+/**
+ * @brief Returns the size of the underlying data blob.
+ */
 std::size_t array::data_size() const
 {
     return size() * _descr.stride();
@@ -445,6 +583,9 @@ std::size_t array::data_size() const
 
 
 
+/**
+ * @brief Loads the give npz @a file
+ */
 npz npz_load(const fs::path& file)
 {
     std::unordered_map<std::string, array> arrays;
@@ -464,6 +605,9 @@ npz npz_load(const fs::path& file)
     return arrays;
 }
 
+/**
+ * @brief Saves the given set of @a arrays into a npz @a file
+ */
 void npz_save(const npz &arrays, const fs::path& file)
 {
     miniz_cpp::zip_file f;

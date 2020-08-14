@@ -8,7 +8,7 @@ namespace np
 {
 
 /**
- * @brief returns true if the 2 types are equals
+ * @brief Returns wether the 2 types are equals
  */
 bool type_t::operator==(const type_t& o) const
 {
@@ -20,7 +20,7 @@ bool type_t::operator==(const type_t& o) const
 }
 
 /**
- * @brief same as !(*this == o)
+ * @brief |ame as !(*this == o)
  */
 bool type_t::operator!=(const type_t& o) const
 {
@@ -28,7 +28,7 @@ bool type_t::operator!=(const type_t& o) const
 }
 
 /**
- * @brief parse a type string (like '<i4') and return a type_t representation
+ * @brief Parse a type string (like '<i4') and return a type_t representation
  */
 type_t type_t::from_string(const std::string& str)
 {
@@ -196,7 +196,7 @@ type_t type_t::from_string(const std::string& str)
 }
 
 /**
- * @brief transfor the type_t in a string for saving files
+ * @brief Returns a string representation of the current type
  */
 std::string type_t::to_string() const
 {

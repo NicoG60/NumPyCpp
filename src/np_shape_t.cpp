@@ -5,7 +5,7 @@ namespace np
 {
 
 /**
- * @brief return a string representation of the shape (as a tuple)
+ * @brief Returns a string representation of the shape (as a tuple)
  */
 std::string shape_to_string(const shape_t& shape)
 {
@@ -19,6 +19,14 @@ std::string shape_to_string(const shape_t& shape)
     return r;
 }
 
+/**
+ *  @brief Computes recursivly the index of an element in C ordering with the
+ * given a @a shape and coordinates.
+ *
+ * @param shape the shape of the array
+ * @param k the depth of recursion
+ * @param nk the leftest corrdinate
+ */
 template<>
 std::size_t index_c_order(const shape_t& shape, std::size_t k, std::size_t nk)
 {
@@ -33,6 +41,14 @@ std::size_t index_c_order(const shape_t& shape, std::size_t k, std::size_t nk)
     return Nl * nk;
 }
 
+/**
+ * @brief Computes the index of an element in Fortran ordering with the given
+ * shape and coordinates
+ *
+ * @param shape the shape of the array
+ * @param k the depth of recursion
+ * @param nk the leftest corrdinate
+ */
 template<>
 std::size_t index_f_order(const shape_t& shape, std::size_t k, std::size_t nk)
 {

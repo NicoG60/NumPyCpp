@@ -8,7 +8,7 @@ namespace np
 {
 
 /**
- * @brief The error class is an exception object in the no namespace
+ * @brief The error class is an exception object in the np namespace
  */
 class error : public std::exception
 {

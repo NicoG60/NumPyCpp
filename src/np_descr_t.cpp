@@ -18,7 +18,7 @@ void descr_t::swap(descr_t& o)
 }
 
 /**
- * @brief Parses the descriptor @a str as given by the numpy file headers.
+ * @brief Parses the descriptor string @a str as given by the numpy file header.
  * @return A descr_t representation of @a str.
  */
 descr_t descr_t::from_string(const std::string& str)
@@ -101,7 +101,8 @@ descr_t descr_t::from_string(const std::string& str)
 }
 
 /**
- * @brief return string representation of the descriptor
+ * @brief Returns a string representation of the descriptor to put in the numpy
+ * header.
  */
 std::string descr_t::to_string() const
 {
@@ -181,6 +182,9 @@ const type_t& descr_t::operator[](const std::string& field) const
     return _fields[it->second].second;
 }
 
+/**
+ * @brief Returns the type description pointed by @a index
+ */
 const field_t& descr_t::operator[](std::size_t index) const
 {
     if(index >= _fields.size())
@@ -197,18 +201,24 @@ bool descr_t::constains(const std::string& field) const
     return _lookup.find(field) != _lookup.end();
 }
 
+/**
+ * @brief Returns wether the current descriptor is empty
+ */
 bool descr_t::empty() const
 {
     return _fields.empty();
 }
 
+/**
+ * @brief Returns wether the current descriptor size
+ */
 std::size_t descr_t::size() const
 {
     return _fields.size();
 }
 
 /**
- * @brief Extract a string in between 2 characters (like [ ] or ( ) or ' '
+ * @brief Extracts a string in between 2 characters (like [ ] or ( ) or ' '
  * @param it an iterator pointing to the openning character
  * @param end the end of the string
  * @param b the openning character
@@ -245,7 +255,7 @@ std::string descr_t::extract(std::string::iterator& it,
 }
 
 /**
- * @brief parse a simplu tuple ('name', 'type')
+ * @brief Parses a simple tuple ('name', 'type')
  *
  * any other tuple will raise an error
  */

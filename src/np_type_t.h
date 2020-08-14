@@ -30,6 +30,9 @@ public:
     bool operator==(const type_t& o) const;
     bool operator!=(const type_t& o) const;
 
+    /**
+     * @brief Returns wether T is the same as the current type held.
+     */
     template<class T>
     bool is(bool check_endianness = false)
     {
@@ -40,6 +43,9 @@ public:
 
     static type_t from_string(const std::string& str);
 
+    /**
+     * @brief make a new type_t from c++ T and optionnal @a endianness
+     */
     template<class T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
     static type_t from_type(Endianness e = NativeEndian)
     {
