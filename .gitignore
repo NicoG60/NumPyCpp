@@ -1,2 +1,6 @@
 *build*
 *.user*
+.vscode
+.DS_Store
+*.npy
+*.npz
