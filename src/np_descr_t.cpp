@@ -126,9 +126,9 @@ std::string descr_t::to_string() const
     for(auto& f : _fields)
     {
         if(std::regex_match(f.first, unnamed_test))
-            return "(''," + f.second.to_string() + "),";
+            r += "(''," + f.second.to_string() + "),";
         else
-            return "('" + f.first + "'," + f.second.to_string() + "),";
+            r += "('" + f.first + "'," + f.second.to_string() + "),";
     }
 
     r += "]";

@@ -118,129 +118,6 @@ TEST_CASE("array unit test", "[array]")
         REQUIRE(a.data_as<double>() != nullptr);
     }
 
-    SECTION("type_t")
-    {
-        np::type_t t;
-
-        REQUIRE(t.index()      == typeid (void));
-        REQUIRE(t.ptype()      == '\0');
-        REQUIRE(t.size()       == 0);
-        REQUIRE(t.offset()     == 0);
-        REQUIRE(t.endianness() == np::NativeEndian);
-        REQUIRE(t.suffix().empty());
-        REQUIRE_THROWS(t.to_string());
-
-        t = np::type_t::from_type<std::int32_t>(np::BigEndian);
-
-        REQUIRE_NOTHROW(t.to_string());
-        REQUIRE(t.to_string() == "'>i4'");
-
-        t = np::type_t::from_string("'<M8[ns]'");
-
-        REQUIRE(t.index()      == typeid (std::int64_t));
-        REQUIRE(t.ptype()      == 'M');
-        REQUIRE(t.size()       == 8);
-        REQUIRE(t.offset()     == 0);
-        REQUIRE(t.endianness() == np::LittleEndian);
-        REQUIRE(t.suffix()     == "[ns]");
-
-        REQUIRE_NOTHROW(t.to_string());
-        REQUIRE(t.to_string() == "'<M8[ns]'");
-
-        t = np::type_t::from_string("\"<u2\"");
-
-        REQUIRE(t.index()      == typeid (std::uint16_t));
-        REQUIRE(t.ptype()      == 'u');
-        REQUIRE(t.size()       == 2);
-        REQUIRE(t.offset()     == 0);
-        REQUIRE(t.endianness() == np::LittleEndian);
-        REQUIRE(t.suffix().empty());
-
-        REQUIRE(t == np::type_t::from_string("'<u2'"));
-
-        REQUIRE_THROWS(np::type_t::from_string(""));
-        REQUIRE_THROWS(np::type_t::from_string("\"\""));
-        REQUIRE_THROWS(np::type_t::from_string("''"));
-        REQUIRE_THROWS(np::type_t::from_string("test"));
-        REQUIRE_THROWS(np::type_t::from_string("'test'"));
-        REQUIRE_THROWS(np::type_t::from_string("\"test\""));
-
-        REQUIRE_THROWS(np::type_t::from_string("=O2"));
-        REQUIRE_THROWS(np::type_t::from_string("<i16"));
-        REQUIRE_THROWS(np::type_t::from_string("<i6"));
-        REQUIRE_THROWS(np::type_t::from_string("=u3"));
-        REQUIRE_THROWS(np::type_t::from_string("=f2"));
-        REQUIRE_THROWS(np::type_t::from_string("<c2"));
-
-        t = np::type_t::from_type<long double>();
-        REQUIRE_THROWS(t.to_string());
-    }
-
-    SECTION("descr_t")
-    {
-        np::descr_t d;
-
-        REQUIRE(d.empty());
-        REQUIRE(d.stride() == 0);
-
-        d = np::descr_t::from_string("'>i4'");
-
-        REQUIRE(d.size() == 1);
-        REQUIRE(d.begin()->first == "f0");
-        REQUIRE(d.begin()->second == np::type_t::from_string("'>i4'"));
-        REQUIRE(d.stride() == 4);
-
-        d = np::descr_t::from_string("('name', '>i4',)");
-
-        REQUIRE(d.size() == 1);
-        REQUIRE(d.begin()->first == "name");
-        REQUIRE(d.begin()->second == np::type_t::from_string("'>i4'"));
-        REQUIRE(d.stride() == 4);
-
-        REQUIRE_THROWS(np::descr_t::from_string("('name', '>i4', (2,3,))"));
-
-        d = np::descr_t::from_string("[('index', '<i8'), ('timestamp', '<M8[ns]'), ('swh', '<f4'), ('mwd', '<f4'), ('mwp', '<f4'), ('dwi', '<f4'), ('wind', '<f4'), ('pp1d', '<f4')]");
-
-        REQUIRE(d.size() == 8);
-        REQUIRE(d.stride() == 40);
-        REQUIRE(d["index"].offset()     == 0);
-        REQUIRE(d["timestamp"].offset() == 8);
-        REQUIRE(d["swh"].offset()       == 16);
-        REQUIRE(d["mwd"].offset()       == 20);
-        REQUIRE(d["mwp"].offset()       == 24);
-        REQUIRE(d["dwi"].offset()       == 28);
-        REQUIRE(d["wind"].offset()      == 32);
-        REQUIRE(d["pp1d"].offset()      == 36);
-
-        d.push_back<double>("TEST");
-
-        REQUIRE(d.size() == 9);
-        REQUIRE(d.stride() == 48);
-        REQUIRE(d["TEST"].offset() == 40);
-
-        d = np::descr_t::make(
-                    np::field_t::make<std::int64_t>("index"),
-                    np::field_t::make<std::int64_t>("timestamp"),
-                    np::field_t::make<float>       ("swh"),
-                    np::field_t::make<float>       ("mwd"),
-                    np::field_t::make<float>       ("mwp"),
-                    np::field_t::make<float>       ("dwi"),
-                    np::field_t::make<float>       ("wind"),
-                    np::field_t::make<float>       ("pp1d")
-                    );
-
-        REQUIRE(d.size() == 8);
-        REQUIRE(d.stride() == 40);
-        REQUIRE(d["index"].offset()     == 0);
-        REQUIRE(d["timestamp"].offset() == 8);
-        REQUIRE(d["swh"].offset()       == 16);
-        REQUIRE(d["mwd"].offset()       == 20);
-        REQUIRE(d["mwp"].offset()       == 24);
-        REQUIRE(d["dwi"].offset()       == 28);
-        REQUIRE(d["wind"].offset()      == 32);
-        REQUIRE(d["pp1d"].offset()      == 36);
-    }
-
     SECTION("iterators + conversion")
     {
         np::array a = np::array(np::descr_t::make<int>(), {3, 3, 3});
@@ -343,5 +220,50 @@ TEST_CASE("array unit test", "[array]")
                 }
             }
         }
+    }
+
+    SECTION("Write array")
+    {
+        // Following the same kinda process as in gen_test_files.py
+        std::size_t years = 20;
+        std::size_t in_hours = years*365*24;
+        std::size_t nb_points = in_hours / 3;
+
+        auto d = np::descr_t::make(
+                    np::field_t::make<std::int64_t>("timestamp"),
+                    np::field_t::make<double>      ("wave_h"),
+                    np::field_t::make<double>      ("wave_p"),
+                    np::field_t::make<double>      ("wave_dir"),
+                    np::field_t::make<double>      ("wind_sp"),
+                    np::field_t::make<double>      ("wind_dir")
+                    );
+
+        np::array a(d, {nb_points});
+
+        for(std::size_t i = 0; i < nb_points; i++)
+        {
+            auto it = a[i];
+            it.value<std::int64_t>("timestamp") = i * 3 * 3600;
+            it.value<double>("wave_h")          = std::rand();
+            it.value<double>("wave_p")          = std::rand();
+            it.value<double>("wave_dir")        = std::rand();
+            it.value<double>("wind_sp")         = std::rand();
+            it.value<double>("wind_dir")        = std::rand();
+        }
+
+        auto tmp = std::filesystem::temp_directory_path();
+        auto dst = tmp / "test_save.npy";
+
+        a.save(dst);
+
+#ifdef USE_PYTHON3
+        std::string cmd = "python3 open_file_test.py " + dst.string();
+#else
+        std::string cmd = "pipenv run python open_file_test.py " + dst.string();
+#endif
+        INFO(cmd)
+        int c = std::system(cmd.c_str());
+
+        REQUIRE(c == 0);
     }
 }

@@ -60,15 +60,14 @@ endif(ENABLE_STATIC)
 if(ENABLE_TESTING)
     enable_testing()
 
+    if(DEFINED ENV{USE_PYTHON3})
+        add_definitions(-DUSE_PYTHON3)
+    endif()
+
+    file(GLOB TEST_SRC ${CMAKE_CURRENT_SOURCE_DIR}/test/*.cpp)
+
     add_subdirectory(${TP_DIR}/Catch2)
-    add_executable(${TEST_TARGET}
-        ${CMAKE_CURRENT_SOURCE_DIR}/test/main.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/test/global.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/test/test_types.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/test/test_npz.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/test/test_f16_error.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/test/test_array.cpp
-    )
+    add_executable(${TEST_TARGET} ${TEST_SRC})
     target_link_libraries(${TEST_TARGET} ${INTERFACE_TARGET} Catch2::Catch2)
 
     include(CTest)

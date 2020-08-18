@@ -81,7 +81,7 @@ np.savez(
 # it will generate some random datas, with a constant timestamp step
 
 years = 20
-in_hours = 20*365*24 # approx, does not vount leap years and stuff
+in_hours = years*365*24 # approx, does not vount leap years and stuff
 nb_points = int(in_hours / 3)
 
 timestamp = np.zeros(nb_points, np.int64)
@@ -100,23 +100,20 @@ npy = np.zeros(nb_points, np.dtype([
     ('wind_dir' , np.float64)
 ]))
 
-index = 0
-for t in range(0, in_hours, 3):
-    timestamp[index] = t * 3600
-    wave_h[index]    = random() * 10
-    wave_p[index]    = random() / 2
-    wave_dir[index]  = random() * 360
-    wind_sp[index]   = random() * 50
-    wind_dir[index]  = random() * 360
+for i in range(nb_points):
+    timestamp[i] = i * 3 * 3600
+    wave_h[i]    = random() * 10
+    wave_p[i]    = random() / 2
+    wave_dir[i]  = random() * 360
+    wind_sp[i]   = random() * 50
+    wind_dir[i]  = random() * 360
 
-    npy[index]['timestamp'] = timestamp[index]
-    npy[index]['wave_h']    = wave_h[index]
-    npy[index]['wave_p']    = wave_p[index]
-    npy[index]['wave_dir']  = wave_dir[index]
-    npy[index]['wind_sp']   = wind_sp[index]
-    npy[index]['wind_dir']  = wind_dir[index]
-
-    index += 1
+    npy[i]['timestamp'] = timestamp[i]
+    npy[i]['wave_h']    = wave_h[i]
+    npy[i]['wave_p']    = wave_p[i]
+    npy[i]['wave_dir']  = wave_dir[i]
+    npy[i]['wind_sp']   = wind_sp[i]
+    npy[i]['wind_dir']  = wind_dir[i]
 
 np.save(os.path.join(files_dir, 'huge.npy'), npy)
 np.savez(

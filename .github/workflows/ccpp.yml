@@ -21,6 +21,7 @@ jobs:
     - env:
         CC: /usr/bin/gcc-9
         CXX: /usr/bin/g++-9
+        USE_PYTHON3: True
       run: cmake .
 
     - run: make -j $(nproc --all)
