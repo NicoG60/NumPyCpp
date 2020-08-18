@@ -57,7 +57,7 @@ Don't forget to
 Read a simple array (Let's say it's an array of floats)
 
 ```cpp
-np::array a("./your/file.npy");
+np::array a = np::array::load("./your/file.npy");
 
 // ==== Read values
 
@@ -92,7 +92,7 @@ for(auto& it : a)
 Read a structured array
 
 ```cpp
-np::array a("./your/structured.npy");
+np::array a = np::array::load("./your/structured.npy");
 
 // ==== Read values
 
@@ -128,10 +128,10 @@ At the moment you can create simple arrays but not structure one. sorry.
 
 ```cpp
 // Make an empty 3D int array of size 3
-np::array a = np::array::make<int>({3, 3, 3});
+np::array a(np::descr_t::make<int>(), {3, 3, 3});
 
 //Modify it
-a.at(1, 2, 3).value<int>() = 123;
+a.at(0, 1, 2).value<int>() = 123;
 
 //save it
 a.save("./save/file.npy");
