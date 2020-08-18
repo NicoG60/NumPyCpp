@@ -13,7 +13,7 @@ TEST_CASE("Open wrong type file", "[npy][npz][failure]")
     }
 
     try {
-        np::npz npz = np::npz_load(NPZ);
+        np::npz npz = np::npz_load(NPZ_F16);
         FAIL("should not open this npz one.");
     } catch (...) {
         INFO("nice");

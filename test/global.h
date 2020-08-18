@@ -25,8 +25,8 @@ extern const fs::path NPY_F16;
 extern const fs::path NPY_F32;
 extern const fs::path NPY_F64;
 
-extern const fs::path NPZ;
-extern const fs::path NPZ_GOOD;
+extern const fs::path NPZ_F16;
+extern const fs::path NPZ_TYPES;
 extern const fs::path NPZ_HUGE;
 extern const fs::path NPY_HUGE;
 

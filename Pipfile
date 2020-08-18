@@ -1,0 +1,16 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[scripts]
+gen_test_files = "python test/gen_test_files.py"
+
+[dev-packages]
+pylint = "*"
+
+[packages]
+numpy = "*"
+
+[requires]
+python_version = "3.8"

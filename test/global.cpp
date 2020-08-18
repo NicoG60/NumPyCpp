@@ -20,10 +20,10 @@ const fs::path NPY_F16 = TYPE_DIR/"float16.npy";
 const fs::path NPY_F32 = TYPE_DIR/"float32.npy";
 const fs::path NPY_F64 = TYPE_DIR/"float64.npy";
 
-const fs::path NPZ      = FILES_DIR/"numpy-types.npz";
-const fs::path NPZ_GOOD = FILES_DIR/"numpy-good.npz";
-const fs::path NPZ_HUGE = FILES_DIR/"huge.npz";
-const fs::path NPY_HUGE = FILES_DIR/"huge.npy";
+const fs::path NPZ_F16   = FILES_DIR/"npz-with-f16.npz";
+const fs::path NPZ_TYPES = FILES_DIR/"npz-all-types.npz";
+const fs::path NPZ_HUGE  = FILES_DIR/"huge.npz";
+const fs::path NPY_HUGE  = FILES_DIR/"huge.npy";
 
 const std::array<fs::path, 11> NPY_TYPE_FILES = {
     NPY_B,

@@ -10,7 +10,7 @@ TEMPLATE_TEST_CASE("Open npz file", "[npz]",
                    int64_t, uint64_t,
                    float, double)
 {
-    np::npz z = np::npz_load(NPZ_GOOD);
+    np::npz z = np::npz_load(NPZ_TYPES);
 
     for(auto& p : z)
     {

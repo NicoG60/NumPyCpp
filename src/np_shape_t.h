@@ -2,6 +2,7 @@
 #define NP_SHAPE_T_H
 
 #include <vector>
+#include <string>
 
 namespace np
 {

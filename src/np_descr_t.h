@@ -48,12 +48,14 @@ public:
     field_t& operator=(const std::pair<N, T>& c)
     {
         std::pair<std::string, type_t>::operator=(c);
+        return *this;
     }
 
     template<class N, class T>
     field_t& operator=(std::pair<N, T>&& m)
     {
         std::pair<std::string, type_t>::operator=(m);
+        return *this;
     }
 
     template<class T>
