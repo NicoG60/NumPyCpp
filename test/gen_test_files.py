@@ -82,7 +82,7 @@ np.savez(
 
 years = 20
 in_hours = 20*365*24 # approx, does not vount leap years and stuff
-nb_points = in_hours / 3
+nb_points = int(in_hours / 3)
 
 timestamp = np.zeros(nb_points, np.int64)
 wave_h    = np.zeros(nb_points, np.float64)

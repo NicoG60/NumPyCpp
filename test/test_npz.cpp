@@ -33,7 +33,7 @@ TEMPLATE_TEST_CASE("Open npz file", "[npz]",
                 REQUIRE_FALSE(b1);
                 REQUIRE(b2);
                 REQUIRE(b3);
-                REQUIRE_FALSE(b4);
+                REQUIRE(b4);
             }
             else
             {

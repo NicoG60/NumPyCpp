@@ -3,8 +3,6 @@ name: C/C++ CI
 on:
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
 
 jobs:
   build:
@@ -16,11 +14,15 @@ jobs:
       with:
         submodules: true
       
+    - run: pip3 install numpy
+
+    - run: python3 test/gen_test_files.py
+
     - env:
-        CC: /usr/bin/gcc-8
-        CXX: /usr/bin/g++-8
+        CC: /usr/bin/gcc-9
+        CXX: /usr/bin/g++-9
       run: cmake .
 
     - run: make -j $(nproc --all)
 
-    - run: make test
+    - run: ctest

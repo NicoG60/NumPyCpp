@@ -31,7 +31,7 @@ TEMPLATE_TEST_CASE("Open simple file", "[npy]",
                 REQUIRE_FALSE(b1);
                 REQUIRE(b2);
                 REQUIRE(b3);
-                REQUIRE_FALSE(b4);
+                REQUIRE(b4);
             }
             else
             {
@@ -57,5 +57,5 @@ TEST_CASE("Open huge file", "[npy]")
 {
     np::array huge = np::array::load(NPY_HUGE);
     REQUIRE(huge.dimensions() == 1);
-    REQUIRE(huge.descr().stride() == 40);
+    REQUIRE(huge.descr().stride() == 48);
 }
