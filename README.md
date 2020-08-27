@@ -38,7 +38,7 @@ You can easily  integrate it to CMake as a subdirectory.
 It creates an `INTERFACE` target you can link against. You dont even have to build the static or shared libraries.
 
 ```cmake
-add_subdirectory(path/to/NumPyCpp EXCLUDE_FROM_ALL) # Exclude libs and tests from the built
+add_subdirectory(path/to/NumPyCpp)
 target_link_libraries(${YOUR_TARGET} NumPyCpp) # just link the interface and you're done
 ```
 
