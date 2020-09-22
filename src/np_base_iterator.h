@@ -69,7 +69,7 @@ public:
     /**
      * @brief checks iterator validity
      */
-    operator bool()
+    operator bool() const
     {
         return _array;
     }
@@ -77,7 +77,7 @@ public:
     /**
      * @brief checks iterator invalidity
      */
-    bool operator!()
+    bool operator!() const
     {
         return !_array;
     }
