@@ -319,6 +319,90 @@ array array::load(std::istream& stream)
 }
 
 /**
+ * @brief loads numpy data from the given @a file
+ */
+array array::load(std::FILE* file)
+{
+    //Check the magic phrase
+    char magic[7];
+    std::memset(magic, 0, 7);
+    std::fread(magic, 1, 6, file);
+
+    if(std::strcmp(magic, "\x93NUMPY") != 0)
+        throw error("not a numpy file");
+
+    //Check version
+    std::uint8_t maj, min;
+    std::fread(&maj, 1, 1, file);
+    std::fread(&min, 1, 1, file);
+
+    //read header len, little endian
+    std::size_t header_len = 0;
+
+    if(maj == 1 && min == 0) // 2 bytes for v1.0
+    {
+        std::uint16_t tmp;
+        std::fread(&tmp, 2, 1, file);
+        header_len = byte_swap(tmp, LittleEndian, NativeEndian);
+    }
+    else if(maj == 2 && min == 0) // 4 bytes for v2.0
+    {
+        std::fread(&header_len, 4, 1, file);
+        header_len = byte_swap(header_len, LittleEndian, NativeEndian);
+    }
+    else
+        throw error(std::to_string(maj)+"."+std::to_string(min) +
+                                 ": sorry, I can't read that version...");
+
+    //Read the header
+    std::string header(header_len, 0);
+    std::fread(header.data(), 1, header_len, file);
+
+    bool fortran_order = false;
+    shape_t shape;
+    descr_t descr;
+
+    // Parse the header
+    try
+    {
+        std::regex dict ("'([a-zA-Z0-9_-]+)':\\s*('[|=<>][a-zA-Z]\\d(\\[[a_zA-Z]+\\])?'|\\[.*\\]|True|False|\\(.*\\))");
+        std::unordered_map<std::string, std::string> header_dict;
+
+        auto dict_begin = std::sregex_iterator(header.begin(), header.end(), dict);
+        auto dict_end = std::sregex_iterator();
+
+        for(auto it = dict_begin; it != dict_end; ++it)
+            header_dict.emplace(it->str(1), it->str(2));
+
+        fortran_order = header_dict.at("fortran_order") == "True";
+
+        std::string shape_str = header_dict.at("shape");
+        std::regex shape_value("\\d+");
+        auto sbegin = std::sregex_iterator(shape_str.begin(), shape_str.end(), shape_value);
+        auto send   = std::sregex_iterator();
+
+        for(auto it = sbegin; it != send; ++it)
+        {
+            std::string str = it->str();
+            std::size_t c = std::stoul(str);
+            shape.push_back(c);
+        }
+
+        descr = descr_t::from_string(header_dict.at("descr"));
+    }
+    catch(std::exception& e)
+    {
+        throw error("unable to parse numpy file header");
+    }
+
+    array a(descr, shape, fortran_order);
+
+    std::fread(a._data, 1, a.data_size(), file);
+
+    return a;
+}
+
+/**
  * @brief Saves the current array into @a file.
  * @throw a np::error on failure.
  */

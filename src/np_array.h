@@ -60,6 +60,7 @@ public:
 
     static array load(const std::filesystem::path& file);
     static array load(std::istream& stream);
+    static array load(std::FILE* file);
 
     void save(const std::filesystem::path& file) const;
     void save(std::ostream& stream) const;
