@@ -42,7 +42,7 @@ include_directories(${SRC_DIR})
 
 add_library(${INTERFACE_TARGET} INTERFACE)
 target_sources(${INTERFACE_TARGET} INTERFACE ${SRC})
-target_include_directories(${INTERFACE_TARGET} INTERFACE ${TP_DIR}/miniz-cpp)
+target_include_directories(${INTERFACE_TARGET} INTERFACE ${SRC_DIR} ${TP_DIR}/miniz-cpp)
 if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
     target_link_libraries(${INTERFACE_TARGET} INTERFACE stdc++fs)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
