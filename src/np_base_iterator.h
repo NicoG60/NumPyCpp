@@ -67,6 +67,22 @@ public:
     }
 
     /**
+     * @brief checks iterator validity
+     */
+    operator bool()
+    {
+        return _array;
+    }
+
+    /**
+     * @brief checks iterator invalidity
+     */
+    bool operator!()
+    {
+        return !_array;
+    }
+
+    /**
      * @brief Wether the other is pointing at the same element as this.
      * @throw a np::error if the iterator comes from another array.
      */
