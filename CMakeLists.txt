@@ -74,7 +74,7 @@ if(${ENABLE_TESTING})
 
     add_executable(${TEST_TARGET} ${TEST_SRC})
     target_link_libraries(${TEST_TARGET} ${INTERFACE_TARGET} Catch2::Catch2)
-    
+
     include(CTest)
     include(${TP_DIR}/Catch2/contrib/Catch.cmake)
 
