@@ -69,7 +69,7 @@ public:
     /**
      * @brief checks iterator validity
      */
-    operator bool() const
+    explicit operator bool() const
     {
         return _array;
     }
