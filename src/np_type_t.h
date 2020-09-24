@@ -34,7 +34,7 @@ public:
      * @brief Returns wether T is the same as the current type held.
      */
     template<class T>
-    bool is(bool check_endianness = false)
+    bool is(bool check_endianness = false) const
     {
         return _index == typeid (T)
                 && _size == sizeof (T)
