@@ -1,9 +1,6 @@
 #include "np_array.h"
 #include "np_error.h"
 
-#include <fstream>
-#include <regex>
-
 namespace fs = std::filesystem;
 
 #include <zip_file.hpp>
@@ -225,12 +222,14 @@ const char* array::data() const
  */
 array array::load(const fs::path& file)
 {
-    std::ifstream st(file, std::ios_base::in | std::ios_base::binary);
+    auto f = std::fopen(file.c_str(), "rb");
 
-    if(!st || !st.is_open())
-        throw error("unable to open file " + file.string());
+    if(!f)
+        throw error("unable to open file");
 
-    return load(st);
+    finally cleanup([=](){ std::fclose(f); });
+
+    return load(f);
 }
 
 /**
@@ -239,83 +238,7 @@ array array::load(const fs::path& file)
  */
 array array::load(std::istream& stream)
 {
-    //Check the magic phrase
-    char magic[7];
-    std::memset(magic, 0, 7);
-    stream.read(magic, 6);
-
-    if(std::strcmp(magic, "\x93NUMPY") != 0)
-        throw error("not a numpy file");
-
-    //Check version
-    std::uint8_t maj, min;
-    stream.read(reinterpret_cast<char*>(&maj), 1);
-    stream.read(reinterpret_cast<char*>(&min), 1);
-
-    //read header len, little endian
-    std::size_t header_len = 0;
-
-    if(maj == 1 && min == 0) // 2 bytes for v1.0
-    {
-        std::uint16_t tmp;
-        stream.read(reinterpret_cast<char*>(&tmp), 2);
-        header_len = byte_swap(tmp, LittleEndian, NativeEndian);
-    }
-    else if(maj == 2 && min == 0) // 4 bytes for v2.0
-    {
-        stream.read(reinterpret_cast<char*>(&header_len), 4);
-        header_len = byte_swap(header_len, LittleEndian, NativeEndian);
-    }
-    else
-        throw error(std::to_string(maj)+"."+std::to_string(min) +
-                                 ": sorry, I can't read that version...");
-
-    //Read the header
-    std::string header(header_len, 0);
-    stream.read(&header[0], header_len);
-
-    bool fortran_order = false;
-    shape_t shape;
-    descr_t descr;
-
-    // Parse the header
-    try
-    {
-        std::regex dict ("'([a-zA-Z0-9_-]+)':\\s*('[|=<>][a-zA-Z]\\d(\\[[a_zA-Z]+\\])?'|\\[.*\\]|True|False|\\(.*\\))");
-        std::unordered_map<std::string, std::string> header_dict;
-
-        auto dict_begin = std::sregex_iterator(header.begin(), header.end(), dict);
-        auto dict_end = std::sregex_iterator();
-
-        for(auto it = dict_begin; it != dict_end; ++it)
-            header_dict.emplace(it->str(1), it->str(2));
-
-        fortran_order = header_dict.at("fortran_order") == "True";
-
-        std::string shape_str = header_dict.at("shape");
-        std::regex shape_value("\\d+");
-        auto sbegin = std::sregex_iterator(shape_str.begin(), shape_str.end(), shape_value);
-        auto send   = std::sregex_iterator();
-
-        for(auto it = sbegin; it != send; ++it)
-        {
-            std::string str = it->str();
-            std::size_t c = std::stoul(str);
-            shape.push_back(c);
-        }
-
-        descr = descr_t::from_string(header_dict.at("descr"));
-    }
-    catch(std::exception& e)
-    {
-        throw error("unable to parse numpy file header");
-    }
-
-    array a(descr, shape, fortran_order);
-
-    stream.read(a._data, a.data_size());
-
-    return a;
+    return load<stream_reader>(stream);
 }
 
 /**
@@ -323,83 +246,7 @@ array array::load(std::istream& stream)
  */
 array array::load(std::FILE* file)
 {
-    //Check the magic phrase
-    char magic[7];
-    std::memset(magic, 0, 7);
-    std::fread(magic, 1, 6, file);
-
-    if(std::strcmp(magic, "\x93NUMPY") != 0)
-        throw error("not a numpy file");
-
-    //Check version
-    std::uint8_t maj, min;
-    std::fread(&maj, 1, 1, file);
-    std::fread(&min, 1, 1, file);
-
-    //read header len, little endian
-    std::size_t header_len = 0;
-
-    if(maj == 1 && min == 0) // 2 bytes for v1.0
-    {
-        std::uint16_t tmp;
-        std::fread(&tmp, 2, 1, file);
-        header_len = byte_swap(tmp, LittleEndian, NativeEndian);
-    }
-    else if(maj == 2 && min == 0) // 4 bytes for v2.0
-    {
-        std::fread(&header_len, 4, 1, file);
-        header_len = byte_swap(header_len, LittleEndian, NativeEndian);
-    }
-    else
-        throw error(std::to_string(maj)+"."+std::to_string(min) +
-                                 ": sorry, I can't read that version...");
-
-    //Read the header
-    std::string header(header_len, 0);
-    std::fread(header.data(), 1, header_len, file);
-
-    bool fortran_order = false;
-    shape_t shape;
-    descr_t descr;
-
-    // Parse the header
-    try
-    {
-        std::regex dict ("'([a-zA-Z0-9_-]+)':\\s*('[|=<>][a-zA-Z]\\d(\\[[a_zA-Z]+\\])?'|\\[.*\\]|True|False|\\(.*\\))");
-        std::unordered_map<std::string, std::string> header_dict;
-
-        auto dict_begin = std::sregex_iterator(header.begin(), header.end(), dict);
-        auto dict_end = std::sregex_iterator();
-
-        for(auto it = dict_begin; it != dict_end; ++it)
-            header_dict.emplace(it->str(1), it->str(2));
-
-        fortran_order = header_dict.at("fortran_order") == "True";
-
-        std::string shape_str = header_dict.at("shape");
-        std::regex shape_value("\\d+");
-        auto sbegin = std::sregex_iterator(shape_str.begin(), shape_str.end(), shape_value);
-        auto send   = std::sregex_iterator();
-
-        for(auto it = sbegin; it != send; ++it)
-        {
-            std::string str = it->str();
-            std::size_t c = std::stoul(str);
-            shape.push_back(c);
-        }
-
-        descr = descr_t::from_string(header_dict.at("descr"));
-    }
-    catch(std::exception& e)
-    {
-        throw error("unable to parse numpy file header");
-    }
-
-    array a(descr, shape, fortran_order);
-
-    std::fread(a._data, 1, a.data_size(), file);
-
-    return a;
+    return load<file_io>(file);
 }
 
 /**
@@ -408,12 +255,14 @@ array array::load(std::FILE* file)
  */
 void array::save(const fs::path& file) const
 {
-    std::ofstream st(file, std::ios::binary);
+    auto f = std::fopen(file.c_str(), "wb");
 
-    if(!st || !st.is_open())
+    if(!f)
         throw error("unable to open file");
 
-    return save(st);
+    finally cleanup([=](){ std::fclose(f); });
+
+    save(f);
 }
 
 /**
@@ -422,15 +271,16 @@ void array::save(const fs::path& file) const
  */
 void array::save(std::ostream& stream) const
 {
-    const char* magic = "\x93NUMPY\x2\x0";
-    std::string header_str = header();
-    std::uint32_t len = header_str.length();
-    len = byte_swap(len, NativeEndian, LittleEndian);
+    save<stream_writer>(stream);
+}
 
-    stream.write(magic, 8);
-    stream.write(reinterpret_cast<char*>(&len), 4);
-    stream.write(&header_str[0], len);
-    stream.write(_data, data_size());
+/**
+ * @brief Saves the current array into the given @a stream.
+ * @throw a np::error on failure
+ */
+void array::save(FILE* file) const
+{
+    save<file_io>(file);
 }
 
 /**
@@ -660,6 +510,103 @@ std::size_t array::data_size() const
 {
     return size() * _descr.stride();
 }
+
+
+
+// ====== Utilities ============================================================
+
+
+
+stream_reader::stream_reader(std::istream& stream) :
+    stream(stream)
+{
+    if(!stream)
+        throw error("input stream in fail state");
+}
+
+void stream_reader::read(void *ptr, std::size_t size)
+{
+    stream.read(reinterpret_cast<char*>(ptr), size);
+
+    if(size != stream.gcount())
+        throw error("error while reading input stream: "
+                    "only " + std::to_string(stream.gcount()) + " byte(s) read "
+                    "where " + std::to_string(size) + " byte(s) were expected");
+
+    if(!stream)
+        throw error("error while reading input stream");
+}
+
+std::size_t stream_reader::available()
+{
+    auto data_start = stream.tellg();
+    stream.seekg(0, std::ios_base::end);
+    auto data_end = stream.tellg();
+    stream.seekg(data_start, std::ios_base::beg);
+
+    return data_end-data_start;
+}
+
+stream_writer::stream_writer(std::ostream& stream) :
+    stream(stream)
+{
+    if(!stream)
+        throw error("output stream in fail state");
+}
+
+void stream_writer::write(const void* ptr, std::size_t size)
+{
+    stream.write(reinterpret_cast<const char*>(ptr), size);
+
+    if(!stream)
+        throw error("error while writing output stream");
+}
+
+file_io::file_io(std::FILE* file) :
+    file(file)
+{
+    if(!file)
+        throw error("file not openend");
+}
+
+void file_io::read(void* ptr, std::size_t size)
+{
+    auto count = std::fread(ptr, 1, size, file);
+
+    if(std::feof(file))
+        throw error("end of file");
+    else if(std::ferror(file))
+        throw error(std::strerror(errno));
+    else if(count != size)
+        throw error("error while reading file: "
+                    "only " + std::to_string(count) + "byte(s) read "
+                    "where " + std::to_string(size) + "byte(s) were expected");
+}
+
+void file_io::write(const void* ptr, std::size_t size)
+{
+    auto count = std::fwrite(ptr, 1, size, file);
+
+    if(std::feof(file))
+        throw error("end of file");
+    else if(std::ferror(file))
+        throw error(std::strerror(errno));
+    else if(count != size)
+        throw error("error while writing file: "
+                    "only " + std::to_string(count) + "byte(s) written "
+                    "where " + std::to_string(size) + "byte(s) were expected");
+}
+
+std::size_t file_io::available()
+{
+    auto data_start = std::ftell(file);
+    std::fseek(file, 0, SEEK_END);
+    auto data_end = std::ftell(file);
+    std::fseek(file, data_start, SEEK_SET);
+
+    return data_end-data_start;
+}
+
 
 
 

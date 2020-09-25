@@ -6,15 +6,20 @@
 
 TEST_CASE("Benchmark C vs std::stream", "[array]")
 {
-    BENCHMARK("load stream")
-    {
-        std::ifstream stream(NPY_HUGE, std::ios_base::in | std::ios_base::binary);
-        return np::array::load(stream);
-    };
-
     BENCHMARK("load c style")
     {
         auto file = std::fopen(NPY_HUGE.c_str(), "rb");
-        return np::array::load(file);
+        auto a = np::array::load(file);
+        std::fclose(file);
+        a.convert_to();
+        return a;
+    };
+
+    BENCHMARK("load stream")
+    {
+        std::ifstream stream(NPY_HUGE, std::ios_base::in | std::ios_base::binary);
+        auto a = np::array::load(stream);
+        a.convert_to();
+        return a;
     };
 }
