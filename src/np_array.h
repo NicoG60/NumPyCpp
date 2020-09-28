@@ -171,7 +171,7 @@ public:
         while((8 + header_str.length()) % 64 != 0)
             header_str.push_back(' ');
 
-        std::uint32_t len = header_str.length();
+        std::size_t len = header_str.length();
         len = byte_swap(len, NativeEndian, LittleEndian);
 
         io.write(magic, 8);
