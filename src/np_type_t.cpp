@@ -14,6 +14,7 @@ bool type_t::operator==(const type_t& o) const
 {
     return     _index      == o._index
             && _ptype      == o._ptype
+            && _strsize    == o._strsize
             && _size       == o._size
             && _offset     == o._offset
             && _endianness == o._endianness;
@@ -45,13 +46,13 @@ type_t type_t::from_string(const std::string& str)
         t.erase(t.size()-1, 1);
     }
 
-    std::regex check("^[<>|=][a-zA-Z]\\d(\\[[a-zA-Z]+\\])?$");
+    std::regex check("^[<>|=][a-zA-Z](\\d+)(\\[[a-zA-Z]+\\])?$");
     std::smatch m;
 
     if(!std::regex_match(t, m, check))
         throw error("unsupported type " + t);
 
-    r._suffix = m.str(1);
+    r._suffix = m.str(2);
 
     switch(t[0])
     {
@@ -90,18 +91,19 @@ type_t type_t::from_string(const std::string& str)
     case 'u':
     case 'f':
     case 'c':
+    case 'U':
         size_check = true;
         break;
 
     case 'O':
     case 'S':
-    case 'U':
+    case 'a':
     case 'V':
         throw error("unsupported type " + t);
         break;
     }
 
-    r._size = std::stoul(t.substr(2, 1));
+    r._size = std::stoul(m.str(1));
 
     if(size_check)
     {
@@ -187,6 +189,12 @@ type_t type_t::from_string(const std::string& str)
             }
             break;
 
+        case 'U':
+            r._index = typeid(char32_t[]);
+            r._strsize = r._size;
+            r._size *= sizeof (char32_t);
+            break;
+
         default:
             throw error("unsupported type " + t);
         }
@@ -229,7 +237,10 @@ std::string type_t::to_string() const
     else
         throw error("unknown type " + std::string(_index.name()));
 
-    r += std::to_string(_size) + _suffix;
+    if(r.back() == 'U')
+        r += std::to_string(_strsize) + _suffix;
+    else
+        r += std::to_string(_size) + _suffix;
 
     r += "'";
 

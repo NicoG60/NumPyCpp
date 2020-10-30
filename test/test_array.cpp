@@ -266,4 +266,39 @@ TEST_CASE("array unit test", "[array]")
 
         REQUIRE(c == 0);
     }
+
+    SECTION("Strings")
+    {
+        auto d = np::descr_t::from_string("'<U16'");
+        np::array a(d, {10});
+
+        int i = 0;
+        for(auto e : a)
+        {
+            e.setString("Element " + std::to_string(i));
+            i++;
+        }
+
+        auto tmp = std::filesystem::temp_directory_path();
+        auto dst = tmp / "test_string.npy";
+
+        a.save(dst);
+
+#ifdef USE_PYTHON3
+        std::string cmd = "python3 string_test.py " + dst.string();
+#else
+        std::string cmd = "pipenv run python string_test.py " + dst.string();
+#endif
+        INFO(cmd)
+        int c = std::system(cmd.c_str());
+
+        REQUIRE(c == 0);
+
+        i = 0;
+        for(auto e : a)
+        {
+            REQUIRE(e.string() == "Element " + std::to_string(i));
+            i++;
+        }
+    }
 }

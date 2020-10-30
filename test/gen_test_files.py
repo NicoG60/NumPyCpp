@@ -26,6 +26,8 @@ float64 = np.array([-1, 0, 1, 2, 3], dtype=np.float64)
 
 boolean = np.array([-1, 0, 1, 2, 3], dtype=np.bool)
 
+string = np.array(['Element ' + str(x) for x in range(-1, 4)], dtype=np.unicode_)
+
 # Save them
 np.save(os.path.join(types_dir, 'int8.npy'),  int8)
 np.save(os.path.join(types_dir, 'int16.npy'), int16)
@@ -43,6 +45,8 @@ np.save(os.path.join(types_dir, 'float64.npy'), float64)
 
 np.save(os.path.join(types_dir, 'bool.npy'), boolean)
 
+np.save(os.path.join(types_dir, 'string.npy'), string)
+
 # Save npz
 np.savez(
     file=os.path.join(files_dir, 'npz-with-f16.npz'),
@@ -57,7 +61,8 @@ np.savez(
     float16 = float16,
     float32 = float32,
     float64 = float64,
-    bool    = boolean
+    bool    = boolean,
+    string  = string
 )
 
 np.savez(
@@ -72,7 +77,8 @@ np.savez(
     uint64  = uint64,
     float32 = float32,
     float64 = float64,
-    bool    = boolean
+    bool    = boolean,
+    string  = string
 )
 
 # Creates some bigger files
@@ -125,4 +131,3 @@ np.savez(
     wind_sp   = wind_sp,
     wind_dir  = wind_dir
 )
-

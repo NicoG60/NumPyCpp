@@ -111,7 +111,7 @@ public:
         // Parse the header
         try
         {
-            std::regex dict ("'([a-zA-Z0-9_-]+)':\\s*('[|=<>][a-zA-Z]\\d(\\[[a_zA-Z]+\\])?'|\\[.*\\]|True|False|\\(.*\\))");
+            std::regex dict ("'([a-zA-Z0-9_-]+)':\\s*('[|=<>][a-zA-Z]\\d+(\\[[a_zA-Z]+\\])?'|\\[.*\\]|True|False|\\(.*\\))");
             std::unordered_map<std::string, std::string> header_dict;
 
             auto dict_begin = std::sregex_iterator(header.begin(), header.end(), dict);

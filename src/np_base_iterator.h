@@ -2,9 +2,9 @@
 #define NP_BASE_ITERATOR_H
 
 #include "np_error.h"
+#include "np_unicode.h"
 
 #include <type_traits>
-#include <string>
 
 namespace np
 {
@@ -326,6 +326,64 @@ public:
     const T& value(const std::string& field) const
     {
         return *reinterpret_cast<const T*>(ptr(field));
+    }
+
+    /**
+     * @brief returns a copy of the current string element
+     */
+    std::string string() const
+    {
+        if(_array->type().ptype() != 'U')
+            throw error("not a string field");
+
+        std::size_t s = _array->type().strsize();
+        const char32_t* u32 = reinterpret_cast<const char32_t*>(ptr());
+
+        auto u32str = copy(u32, s);
+
+        return u32_to_u8(u32str);
+    }
+
+    /**
+     * @brief returns a copy of the current string element at @a field
+     */
+    std::string string(const std::string& field) const
+    {
+        if(_array->type(field).ptype() != 'U')
+            throw error("not a string field");
+
+        std::size_t s = _array->type(field).strsize();
+        const char32_t* u32 = reinterpret_cast<const char32_t*>(ptr(field));
+
+        auto u32str = copy(u32, s);
+
+        return u32_to_u8(u32str);
+    }
+
+    void setString(const std::string& str)
+    {
+        if(_array->type().ptype() != 'U')
+            throw error("not a string field");
+
+        std::size_t s = _array->type().strsize();
+        char32_t* dst = reinterpret_cast<char32_t*>(ptr());
+
+        auto u32str = u8_to_u32(str);
+        u32str.resize(s, 0);
+        u32str.copy(dst, s);
+    }
+
+    void setString(const std::string& field, const std::string& str)
+    {
+        if(_array->type(field).ptype() != 'U')
+            throw error("not a string field");
+
+        std::size_t s = _array->type(field).strsize();
+        char32_t* dst = reinterpret_cast<char32_t*>(ptr(field));
+
+        auto u32str = u8_to_u32(str);
+        u32str.resize(s, 0);
+        u32str.copy(dst, s);
     }
 
 protected:

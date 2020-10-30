@@ -4,3 +4,6 @@
 [submodule "third_party/Catch2"]
 	path = third_party/Catch2
 	url = https://github.com/catchorg/Catch2.git
+[submodule "third_party/utf-cpp"]
+	path = third_party/utf-cpp
+	url = https://github.com/ww898/utf-cpp

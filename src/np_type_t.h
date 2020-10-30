@@ -62,6 +62,7 @@ public:
 
     inline std::type_index index()      const { return _index;      }
     inline char            ptype()      const { return _ptype;      }
+    inline std::size_t     strsize()    const { return _strsize;    }
     inline std::size_t     size()       const { return _size;       }
     inline std::size_t     offset()     const { return _offset;     }
     inline Endianness      endianness() const { return _endianness; }
@@ -70,6 +71,7 @@ public:
 private:
     std::type_index _index      = typeid (void);
     char            _ptype      = '\0';
+    std::size_t     _strsize    = 0;
     std::size_t     _size       = 0;
     std::size_t     _offset     = 0;
     Endianness      _endianness = NativeEndian;

@@ -53,6 +53,20 @@ TEMPLATE_TEST_CASE("Open simple file", "[npy]",
     }
 }
 
+TEST_CASE("Open simple string file")
+{
+    np::array a = np::array::load(NPY_STR);
+
+    REQUIRE(a.dimensions() == 1);
+    REQUIRE(a.size() == 5);
+
+    REQUIRE(a[0].string() == "Element -1");
+    REQUIRE(a[1].string() == "Element 0");
+    REQUIRE(a[2].string() == "Element 1");
+    REQUIRE(a[3].string() == "Element 2");
+    REQUIRE(a[4].string() == "Element 3");
+}
+
 TEST_CASE("Open huge file", "[npy]")
 {
     np::array huge = np::array::load(NPY_HUGE);

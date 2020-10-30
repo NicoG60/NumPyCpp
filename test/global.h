@@ -25,11 +25,13 @@ extern const fs::path NPY_F16;
 extern const fs::path NPY_F32;
 extern const fs::path NPY_F64;
 
+extern const fs::path NPY_STR;
+
 extern const fs::path NPZ_F16;
 extern const fs::path NPZ_TYPES;
 extern const fs::path NPZ_HUGE;
 extern const fs::path NPY_HUGE;
 
-extern const std::array<fs::path, 11> NPY_TYPE_FILES;
+extern const std::array<fs::path, 12> NPY_TYPE_FILES;
 
 #endif // GLOBAL_H
