@@ -623,7 +623,7 @@ npz npz_load(const fs::path& file)
 
     miniz_cpp::zip_file f;
 
-    f.load(file);
+    f.load(file.string());
 
     for(auto npy_n : f.namelist())
     {
@@ -657,7 +657,7 @@ void npz_save(const npz &arrays, const fs::path& file)
         }
     }
 
-    f.save(file);
+    f.save(file.string());
 }
 
 }
