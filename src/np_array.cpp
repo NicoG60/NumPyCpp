@@ -222,12 +222,12 @@ const char* array::data() const
  */
 array array::load(const fs::path& file)
 {
-    auto f = std::fopen(file.c_str(), "rb");
+    auto f = std::fopen(file.string().c_str(), "rb");
 
     if(!f)
         throw error("unable to open file");
 
-    finally cleanup([=](){ std::fclose(f); });
+    finally cleanup([f](){ std::fclose(f); });
 
     return load(f);
 }
@@ -255,12 +255,12 @@ array array::load(std::FILE* file)
  */
 void array::save(const fs::path& file) const
 {
-    auto f = std::fopen(file.c_str(), "wb");
+    auto f = std::fopen(file.string().c_str(), "wb");
 
     if(!f)
         throw error("unable to open file");
 
-    finally cleanup([=](){ std::fclose(f); });
+    finally cleanup([f](){ std::fclose(f); });
 
     save(f);
 }
