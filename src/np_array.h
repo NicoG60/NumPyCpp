@@ -138,7 +138,7 @@ public:
         }
         catch(std::exception& e)
         {
-            throw error("unable to parse numpy file header");
+            throw error("unable to parse numpy file header: " + std::string(e.what()));
         }
 
         array a(descr, shape, fortran_order);
