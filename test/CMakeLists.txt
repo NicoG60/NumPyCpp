@@ -1,4 +1,4 @@
-if(${ENABLE_TESTING})
+if(${ENABLE_NUMPY_TESTING})
     message("Tests uses python and numpy. Be aware numpy will be installed either using pipenv and pip3.")
 
     if(${USE_PYTHON3})

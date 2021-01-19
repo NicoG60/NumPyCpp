@@ -26,7 +26,7 @@ To enable testing
 > have it setup. Just toggle the `USE_PYTHON3` option `ON` or `OFF`.  
 
 ```bash
-cmake -DENABLE_TESTING=ON -DUSE_PYTHON3=ON -S . -B build
+cmake -DENABLE_NUMPY_TESTING=ON -DUSE_PYTHON3=ON -S . -B build
 ```
 
 ## CMake integration

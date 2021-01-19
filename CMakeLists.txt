@@ -1,19 +1,14 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
-project(numpycpp)
-
-# define library version (update: apparently you can also do it in project()!)
-set(NUMPYCPP_VERSION_MAJOR 1 CACHE STRING "major version" FORCE)
-set(NUMPYCPP_VERSION_MINOR 0 CACHE STRING "minor version" FORCE)
-set(NUMPYCPP_LIBRARY_VERSION ${NUMPYCPP_VERSION_MAJOR}.${NUMPYCPP_VERSION_MINOR} CACHE STRING "version" FORCE)
-set(NUMPYCPP_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE STRING "source dir" FORCE)
-
-set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+project(numpycpp VERSION 1.0)
+set(NUMPYCPP_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 #Configure the project
-option(ENABLE_TESTING "Build the unit tests"  OFF)
+set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+
+option(ENABLE_NUMPY_TESTING "Build the unit tests"  OFF)
 option(USE_PYTHON3    "Enable this option if you don't have pipenv setup and want to run the tests" OFF)
 
-if(${ENABLE_TESTING})
+if(${ENABLE_NUMPY_TESTING})
     enable_testing()
 endif()
 
