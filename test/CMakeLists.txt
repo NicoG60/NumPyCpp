@@ -1,7 +1,5 @@
 if(${ENABLE_TESTING})
-    enable_testing()
-
-    message(WARNING "Tests uses python and numpy. Be aware numpy will be installed either using pipenv and pip3.")
+    message("Tests uses python and numpy. Be aware numpy will be installed either using pipenv and pip3.")
 
     if(${USE_PYTHON3})
         execute_process(

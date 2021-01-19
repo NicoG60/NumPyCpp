@@ -13,6 +13,10 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 option(ENABLE_TESTING "Build the unit tests"  OFF)
 option(USE_PYTHON3    "Enable this option if you don't have pipenv setup and want to run the tests" OFF)
 
+if(${ENABLE_TESTING})
+    enable_testing()
+endif()
+
 #install var
 set(include_dest "include/numpycpp-${NUMPYCPP_VERSION}")
 set(lib_dest "lib/numpycpp-${NUMPYCPP_VERSION}")
