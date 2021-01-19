@@ -11,19 +11,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      with:
-        submodules: true
-      
-    - run: pip3 install numpy
-
-    - run: python3 test/gen_test_files.py
-
-    - env:
-        CC: /usr/bin/gcc-9
-        CXX: /usr/bin/g++-9
-        USE_PYTHON3: True
-      run: cmake .
-
-    - run: make -j $(nproc --all)
-
+    - run: cmake -DENABLE_TESTING=ON -DUSE_PYTHON3=ON -S . -B build
+    - run: cmake --build build -j $(nproc --all)
     - run: ctest
