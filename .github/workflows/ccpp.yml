@@ -11,6 +11,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - run: cmake -DENABLE_TESTING=ON -DUSE_PYTHON3=ON -S . -B build
+    - env:
+        CC: /usr/bin/gcc-8
+        CXX: /usr/bin/g++-8
+      run: cmake -DENABLE_TESTING=ON -DUSE_PYTHON3=ON -S . -B build
     - run: cmake --build build -j $(nproc --all)
     - run: ctest
