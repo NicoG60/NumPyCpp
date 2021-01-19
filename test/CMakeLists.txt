@@ -1,7 +1,7 @@
-if(${ENABLE_NUMPY_TESTING})
+if(${NUMPYCPP_BUILD_TESTS})
     message("Tests uses python and numpy. Be aware numpy will be installed either using pipenv and pip3.")
 
-    if(${USE_PYTHON3})
+    if(${NUMPYCPP_USE_PYTHON3})
         execute_process(
             COMMAND pip3 install numpy
             WORKING_DIRECTORY ${NUMPYCPP_SOURCE_DIR}

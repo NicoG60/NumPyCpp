@@ -36,8 +36,9 @@ target_include_directories(
         ${MINIZ_INCLUDE_DIR}
         ${UTF_INCLUDE_DIR}
 )
-target_compile_features(numpycpp PUBLIC cxx_std_17)
 
 # install
-install(TARGETS numpycpp EXPORT numpycpp DESTINATION "${lib_dest}")
-install(FILES ${header} DESTINATION "${include_dest}")
+if(${NUMPYCPP_INSTALL})
+    install(TARGETS numpycpp EXPORT numpycpp DESTINATION ${lib_dest})
+    install(FILES ${header} DESTINATION ${include_dest})
+endif()

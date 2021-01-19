@@ -15,7 +15,7 @@ jobs:
     - env:
         CC: /usr/bin/gcc-8
         CXX: /usr/bin/g++-8
-      run: cmake -DENABLE_NUMPY_TESTING=ON -DUSE_PYTHON3=ON -S . -B build
+      run: cmake -DNUMPYCPP_BUILD_TESTS=ON -DNUMPYCPP_USE_PYTHON3=ON -S . -B build
 
     - run: cmake --build build -j $(nproc --all)
     
