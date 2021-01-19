@@ -1,4 +1,4 @@
-#include "np_unicode.h"
+#include <numpycpp/np_unicode.h>
 #include <ww898/utf_converters.hpp>
 
 using namespace ww898::utf;

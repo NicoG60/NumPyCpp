@@ -1,5 +1,5 @@
 #include <catch2/catch.hpp>
-#include <numpycpp.h>
+#include <numpycpp/numpycpp.h>
 
 TEST_CASE("descr_t unit test", "[array]")
 {

@@ -1,5 +1,5 @@
-#include "np_descr_t.h"
-#include "np_error.h"
+#include <numpycpp/np_descr_t.h>
+#include <numpycpp/np_error.h>
 
 #include <regex>
 #include <string>

@@ -1,5 +1,5 @@
-#include "np_array.h"
-#include "np_error.h"
+#include <numpycpp/np_array.h>
+#include <numpycpp/np_error.h>
 
 namespace fs = std::filesystem;
 
@@ -222,12 +222,12 @@ const char* array::data() const
  */
 array array::load(const fs::path& file)
 {
-    auto f = std::fopen(file.c_str(), "rb");
+    auto f = std::fopen(file.string().c_str(), "rb");
 
     if(!f)
         throw error("unable to open file");
 
-    finally cleanup([=](){ std::fclose(f); });
+    finally cleanup([f](){ std::fclose(f); });
 
     return load(f);
 }
@@ -255,12 +255,12 @@ array array::load(std::FILE* file)
  */
 void array::save(const fs::path& file) const
 {
-    auto f = std::fopen(file.c_str(), "wb");
+    auto f = std::fopen(file.string().c_str(), "wb");
 
     if(!f)
         throw error("unable to open file");
 
-    finally cleanup([=](){ std::fclose(f); });
+    finally cleanup([f](){ std::fclose(f); });
 
     save(f);
 }
@@ -623,7 +623,7 @@ npz npz_load(const fs::path& file)
 
     miniz_cpp::zip_file f;
 
-    f.load(file);
+    f.load(file.string());
 
     for(auto npy_n : f.namelist())
     {
@@ -657,7 +657,7 @@ void npz_save(const npz &arrays, const fs::path& file)
         }
     }
 
-    f.save(file);
+    f.save(file.string());
 }
 
 }

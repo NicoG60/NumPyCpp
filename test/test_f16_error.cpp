@@ -1,5 +1,5 @@
 #include <catch2/catch.hpp>
-#include <numpycpp.h>
+#include <numpycpp/numpycpp.h>
 #include "global.h"
 
 

@@ -138,7 +138,7 @@ public:
         }
         catch(std::exception& e)
         {
-            throw error("unable to parse numpy file header");
+            throw error("unable to parse numpy file header: " + std::string(e.what()));
         }
 
         array a(descr, shape, fortran_order);
@@ -208,8 +208,7 @@ public:
      *
      * i.e `auto it = array.at(1, 2, 3);`
      */
-    template<class... Args,
-             std::enable_if_t<std::is_integral<Args>::value>...>
+    template<class... Args>
     iterator at(Args... args)
     {
         return at_index(index(args...));
@@ -220,8 +219,7 @@ public:
      *
      * i.e `auto it = array.at(1, 2, 3);`
      */
-    template<class... Args,
-             std::enable_if_t<std::is_integral<Args>::value>...>
+    template<class... Args>
     const_iterator at(Args... args) const
     {
         return at_index(index(args...));

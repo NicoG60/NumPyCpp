@@ -1,4 +1,4 @@
-#include "np_bytes_utils.h"
+#include <numpycpp/np_bytes_utils.h>
 
 #include <cstdint>
 #include <cstddef>
