@@ -19,12 +19,13 @@ class base_iterator
     friend class base_iterator<Array, !is_const>;
 
 public:
-    typedef base_iterator<Array, is_const> value_type;
-    typedef value_type&                    reference;
-    typedef value_type*                    pointer;
-    typedef const value_type&              const_reference;
-    typedef const value_type*              const_pointer;
-    typedef std::ptrdiff_t                 difference_type;
+    typedef base_iterator<Array, is_const>  value_type;
+    typedef value_type&                     reference;
+    typedef value_type*                     pointer;
+    typedef const value_type&               const_reference;
+    typedef const value_type*               const_pointer;
+    typedef std::ptrdiff_t                  difference_type;
+    typedef std::random_access_iterator_tag iterator_category;
 
     base_iterator() = default;
 
