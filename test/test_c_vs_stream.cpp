@@ -8,7 +8,7 @@ TEST_CASE("Benchmark C vs std::stream", "[array]")
 {
     BENCHMARK("load c style")
     {
-        auto file = std::fopen(NPY_HUGE.c_str(), "rb");
+        auto file = std::fopen(NPY_HUGE.string().c_str(), "rb");
         auto a = np::array::load(file);
         std::fclose(file);
         a.convert_to();
