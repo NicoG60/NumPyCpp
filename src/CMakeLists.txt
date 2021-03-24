@@ -1,6 +1,6 @@
 # set headers
 set(header_path "${NUMPYCPP_SOURCE_DIR}/include/numpycpp")
-file(GLOB header ${header_path}/*.h)
+file(GLOB headers ${header_path}/*.h)
 
 # set sources
 file(GLOB src *.cpp)
@@ -30,7 +30,7 @@ target_include_directories(
     numpycpp
     PUBLIC
         $<BUILD_INTERFACE:${NUMPYCPP_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:${lib_dest}>
+        $<INSTALL_INTERFACE:${include_dest}>
 
     PRIVATE
         ${MINIZ_INCLUDE_DIR}
