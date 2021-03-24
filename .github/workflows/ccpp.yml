@@ -7,17 +7,18 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: ['windows-latest', 'ubuntu-latest', 'macos-latest']
+
+    runs-on: {{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v2
 
-    - env:
-        CC: /usr/bin/gcc-8
-        CXX: /usr/bin/g++-8
-      run: cmake -DNUMPYCPP_BUILD_TESTS=ON -DNUMPYCPP_USE_PYTHON3=ON -S . -B build
+    - run: cmake -DNUMPYCPP_BUILD_TESTS=ON -DNUMPYCPP_USE_PYTHON3=ON -S . -B build
 
-    - run: cmake --build build -j $(nproc --all)
+    - run: cmake --build build -j2
     
     - run: ctest
       working-directory: build
