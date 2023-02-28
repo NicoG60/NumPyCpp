@@ -165,10 +165,11 @@ public:
     {
         IOHelper io(h);
 
-        const char* magic = "\x93NUMPY\x2\x0";
+        const char* magic = "\x93NUMPY\x02\x00";
         std::string header_str = header();
 
-        while((8 + header_str.length()) % 64 != 0)
+        // magic + version + len + header
+        while((6 + 2 + 4 + header_str.length()) % 64 != 0)
             header_str.push_back(' ');
 
         std::size_t len = header_str.length();
