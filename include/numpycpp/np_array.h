@@ -6,6 +6,7 @@
 #include "np_base_iterator.h"
 
 #include <filesystem>
+#include <cstring>
 #include <fstream>
 #include <regex>
 
