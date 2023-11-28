@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #include <numpycpp/numpycpp.h>
 
 TEST_CASE("type_t unit test", "[array]")

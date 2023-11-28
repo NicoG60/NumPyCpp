@@ -29,13 +29,13 @@ if(${NUMPYCPP_BUILD_TESTS})
             WORKING_DIRECTORY ${NUMPYCPP_SOURCE_DIR}
         )
         add_subdirectory(${NUMPYCPP_SOURCE_DIR}/third_party/Catch2 ${CMAKE_CURRENT_BINARY_DIR}/Catch2)
-        include(${NUMPYCPP_SOURCE_DIR}/third_party/Catch2/contrib/Catch.cmake)
+        include(${NUMPYCPP_SOURCE_DIR}/third_party/Catch2/extras/Catch.cmake)
     endif()
 
     file(GLOB test_src *.cpp)
 
     add_executable(numpycpp-test ${test_src})
-    target_link_libraries(numpycpp-test numpycpp Catch2::Catch2)
+    target_link_libraries(numpycpp-test numpycpp Catch2::Catch2WithMain)
 
     include(CTest)
 

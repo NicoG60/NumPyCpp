@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #include <numpycpp/numpycpp.h>
 
 TEST_CASE("array unit test", "[array]")
@@ -261,7 +261,7 @@ TEST_CASE("array unit test", "[array]")
 #else
         std::string cmd = "pipenv run python open_file_test.py " + dst.string();
 #endif
-        INFO(cmd)
+        INFO(cmd);
         int c = std::system(cmd.c_str());
 
         REQUIRE(c == 0);
@@ -289,7 +289,7 @@ TEST_CASE("array unit test", "[array]")
 #else
         std::string cmd = "pipenv run python string_test.py " + dst.string();
 #endif
-        INFO(cmd)
+        INFO(cmd);
         int c = std::system(cmd.c_str());
 
         REQUIRE(c == 0);
